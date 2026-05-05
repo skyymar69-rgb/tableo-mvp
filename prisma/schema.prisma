@@ -1,0 +1,450 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth (NextAuth) ──────────────────────────────────────────
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Users & Auth ─────────────────────────────────────────────
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  emailVerified DateTime?
+  password      String?
+  name          String?
+  image         String?
+  phone         String?
+  role          UserRole     @default(OWNER)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  restaurants   Restaurant[]
+  subscription  Subscription?
+  notifications Notification[]
+}
+
+enum UserRole {
+  OWNER
+  MANAGER
+  STAFF
+  ADMIN
+}
+
+// ─── Subscription ─────────────────────────────────────────────
+model Subscription {
+  id               String             @id @default(cuid())
+  userId           String             @unique
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier             SubscriptionTier   @default(FREE)
+  status           SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId String?
+  stripePriceId    String?
+  stripeSubId      String?
+  currentPeriodEnd DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+enum SubscriptionTier {
+  FREE
+  GROWTH
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  TRIALING
+}
+
+// ─── Restaurant ───────────────────────────────────────────────
+model Restaurant {
+  id           String              @id @default(cuid())
+  name         String
+  slug         String              @unique
+  address      String?
+  city         String?
+  phone        String?
+  email        String?
+  logoUrl      String?
+  coverUrl     String?
+  currency     String              @default("EUR")
+  timezone     String              @default("Europe/Paris")
+  status       RestaurantStatus    @default(ACTIVE)
+  ownerId      String
+  owner        User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  settings     RestaurantSettings?
+  menus        Menu[]
+  tables       Table[]
+  orders       Order[]
+  customers    Customer[]
+  analytics    Analytics[]
+  qrCodes      QRCode[]
+  notifications Notification[]
+  staffMembers StaffMember[]
+
+  @@index([ownerId])
+  @@index([slug])
+}
+
+enum RestaurantStatus {
+  ACTIVE
+  SUSPENDED
+  ONBOARDING
+}
+
+model RestaurantSettings {
+  id               String     @id @default(cuid())
+  restaurantId     String     @unique
+  restaurant       Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  primaryColor     String     @default("#F89544")
+  accentColor      String     @default("#D64E7E")
+  tipsEnabled      Boolean    @default(true)
+  tipOptions       Json       @default("[5, 10, 15]")
+  orderingEnabled  Boolean    @default(true)
+  payAtTableEnabled Boolean   @default(false)
+  loyaltyEnabled   Boolean    @default(true)
+  pointsPerEuro    Int        @default(1)
+  defaultLanguage  String     @default("fr")
+  languages        String[]   @default(["fr", "en"])
+  serviceCharge    Float      @default(0)
+  vatRate          Float      @default(20)
+  stripeAccountId  String?
+  updatedAt        DateTime   @updatedAt
+}
+
+model StaffMember {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  email        String
+  name         String
+  role         UserRole   @default(STAFF)
+  inviteToken  String?    @unique
+  accepted     Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+
+  @@unique([restaurantId, email])
+}
+
+// ─── Menu & Dishes ────────────────────────────────────────────
+model Menu {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  isPublished  Boolean    @default(false)
+  publishedAt  DateTime?
+  version      Int        @default(1)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  categories   Category[]
+  qrCodes      QRCode[]
+
+  @@index([restaurantId])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  menuId      String
+  menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  order       Int      @default(0)
+  isVisible   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  dishes      Dish[]
+
+  @@index([menuId])
+}
+
+model Dish {
+  id              String      @id @default(cuid())
+  categoryId      String
+  category        Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  price           Float
+  imageUrl        String?
+  isAvailable     Boolean     @default(true)
+  isFeatured      Boolean     @default(false)
+  calories        Int?
+  allergens       String[]    @default([])
+  labels          DishLabel[] @default([])
+  order           Int         @default(0)
+  translations    Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  orderItems      OrderItem[]
+
+  @@index([categoryId])
+}
+
+enum DishLabel {
+  BESTSELLER
+  NEW
+  VEGAN
+  VEGETARIAN
+  SPICY
+  GLUTEN_FREE
+  CHEF_SPECIAL
+  PROMO
+}
+
+// ─── QR Codes ─────────────────────────────────────────────────
+model QRCode {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menuId       String?
+  menu         Menu?      @relation(fields: [menuId], references: [id])
+  tableId      String?
+  table        Table?     @relation(fields: [tableId], references: [id])
+  name         String
+  url          String
+  style        Json?
+  scans        Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  scanEvents   QRScan[]
+
+  @@index([restaurantId])
+}
+
+model QRScan {
+  id         String   @id @default(cuid())
+  qrCodeId   String
+  qrCode     QRCode   @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+  scannedAt  DateTime @default(now())
+  userAgent  String?
+  ip         String?
+}
+
+// ─── Tables ───────────────────────────────────────────────────
+model Table {
+  id           String      @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  number       String
+  capacity     Int         @default(4)
+  status       TableStatus @default(IDLE)
+  floor        String?
+  orders       Order[]
+  qrCodes      QRCode[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([restaurantId, number])
+  @@index([restaurantId])
+}
+
+enum TableStatus {
+  IDLE
+  OCCUPIED
+  RESERVED
+  CLEANING
+}
+
+// ─── Orders ───────────────────────────────────────────────────
+model Order {
+  id           String      @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  tableId      String?
+  table        Table?      @relation(fields: [tableId], references: [id])
+  customerId   String?
+  customer     Customer?   @relation(fields: [customerId], references: [id])
+  status       OrderStatus @default(PENDING)
+  total        Float       @default(0)
+  notes        String?
+  source       String      @default("qr")
+  items        OrderItem[]
+  payment      Payment?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([restaurantId])
+  @@index([customerId])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  dishId    String
+  dish      Dish     @relation(fields: [dishId], references: [id])
+  quantity  Int      @default(1)
+  unitPrice Float
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+// ─── Payments ─────────────────────────────────────────────────
+model Payment {
+  id              String        @id @default(cuid())
+  orderId         String        @unique
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount          Float
+  tip             Float         @default(0)
+  method          PaymentMethod @default(CARD)
+  status          PaymentStatus @default(PENDING)
+  stripePaymentId String?
+  stripeSessionId String?
+  receiptUrl      String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum PaymentMethod {
+  CARD
+  APPLE_PAY
+  GOOGLE_PAY
+  CASH
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+// ─── CRM ──────────────────────────────────────────────────────
+model Customer {
+  id             String          @id @default(cuid())
+  restaurantId   String
+  restaurant     Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  email          String?
+  name           String?
+  phone          String?
+  totalVisits    Int             @default(0)
+  totalSpent     Float           @default(0)
+  lastVisit      DateTime?
+  loyaltyPoints  Int             @default(0)
+  rfmScore       String?
+  tags           String[]        @default([])
+  optInEmail     Boolean         @default(false)
+  optInSms       Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  orders         Order[]
+  loyaltyHistory LoyaltyEvent[]
+
+  @@unique([restaurantId, email])
+  @@index([restaurantId])
+}
+
+model LoyaltyEvent {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  points     Int
+  type       String
+  note       String?
+  createdAt  DateTime @default(now())
+}
+
+// ─── Analytics ────────────────────────────────────────────────
+model Analytics {
+  id              String     @id @default(cuid())
+  restaurantId    String
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  date            DateTime   @db.Date
+  qrScans         Int        @default(0)
+  menuViews       Int        @default(0)
+  orders          Int        @default(0)
+  revenue         Float      @default(0)
+  avgOrderValue   Float      @default(0)
+  conversionRate  Float      @default(0)
+  newCustomers    Int        @default(0)
+  returningCustomers Int     @default(0)
+  topDishId       String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([restaurantId, date])
+  @@index([restaurantId])
+  @@index([date])
+}
+
+// ─── Notifications ────────────────────────────────────────────
+model Notification {
+  id           String           @id @default(cuid())
+  userId       String?
+  user         User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurantId String?
+  restaurant   Restaurant?      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  type         NotificationType
+  title        String
+  message      String
+  read         Boolean          @default(false)
+  actionUrl    String?
+  createdAt    DateTime         @default(now())
+
+  @@index([userId])
+  @@index([restaurantId])
+}
+
+enum NotificationType {
+  NEW_ORDER
+  PAYMENT_RECEIVED
+  LOW_STOCK
+  NEW_CUSTOMER
+  GOAL_REACHED
+  SYSTEM
+}

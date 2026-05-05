@@ -1,0 +1,26 @@
+{
+  "name": "Tableo",
+  "short_name": "Tableo",
+  "description": "Votre menu digital interactif",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0E1320",
+  "theme_color": "#F89544",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "business"],
+  "lang": "fr"
+}

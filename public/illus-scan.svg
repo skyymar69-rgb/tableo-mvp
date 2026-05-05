@@ -1,0 +1,219 @@
+<svg viewBox="0 0 640 420" xmlns="http://www.w3.org/2000/svg" fill="none" role="img" aria-label="Illustration : client scannant un QR code Tabléo sur sa table de restaurant avec son smartphone">
+  <defs>
+    <linearGradient id="s-bg" x1="0" y1="0" x2="640" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#060e1c"/>
+      <stop offset="100%" stop-color="#0b1a2e"/>
+    </linearGradient>
+    <linearGradient id="s-bl" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1560a8"/>
+      <stop offset="100%" stop-color="#0fa8cc"/>
+    </linearGradient>
+    <linearGradient id="s-bl2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1560a8"/>
+      <stop offset="100%" stop-color="#0fa8cc"/>
+    </linearGradient>
+    <linearGradient id="s-phone" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a2d45"/>
+      <stop offset="100%" stop-color="#0d1e30"/>
+    </linearGradient>
+    <linearGradient id="s-table" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a2d3e"/>
+      <stop offset="100%" stop-color="#0e1c2c"/>
+    </linearGradient>
+    <radialGradient id="s-glow" cx="50%" cy="80%" r="60%">
+      <stop offset="0%" stop-color="#1e7ec8" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#1e7ec8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="s-spot" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1e7ec8" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#1e7ec8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="s-blur12"><feGaussianBlur stdDeviation="12"/></filter>
+    <filter id="s-blur6"><feGaussianBlur stdDeviation="6"/></filter>
+    <filter id="s-blur30"><feGaussianBlur stdDeviation="30"/></filter>
+    <clipPath id="s-cp"><rect x="200" y="40" width="164" height="340" rx="24"/></clipPath>
+  </defs>
+
+  <rect width="640" height="420" fill="url(#s-bg)"/>
+  <ellipse cx="320" cy="360" rx="320" ry="200" fill="url(#s-glow)" filter="url(#s-blur30)"/>
+
+  <!-- Table surface perspective -->
+  <ellipse cx="320" cy="370" rx="280" ry="55" fill="#0e1c2e" stroke="#1a3555" stroke-width="1"/>
+  <ellipse cx="320" cy="365" rx="270" ry="50" fill="url(#s-table)" stroke="#1e3d5a" stroke-width="0.8"/>
+
+  <!-- Table cloth subtle lines -->
+  <g stroke="#1a3555" stroke-width="0.4" opacity="0.35">
+    <ellipse cx="320" cy="365" rx="220" ry="40"/>
+    <ellipse cx="320" cy="365" rx="170" ry="30"/>
+    <ellipse cx="320" cy="365" rx="120" ry="20"/>
+  </g>
+
+  <!-- QR Table tent on table -->
+  <g transform="translate(380, 260) rotate(-8)">
+    <!-- Tent shadow -->
+    <ellipse cx="55" cy="105" rx="48" ry="8" fill="#000" fill-opacity="0.5" filter="url(#s-blur6)"/>
+    <!-- Tent body -->
+    <rect x="10" y="10" width="90" height="96" rx="8" fill="#0f1e32" stroke="#1e4878" stroke-width="1.2"/>
+    <!-- Header -->
+    <rect x="10" y="10" width="90" height="28" rx="8" fill="url(#s-bl)"/>
+    <rect x="10" y="26" width="90" height="12" fill="url(#s-bl)"/>
+    <text x="55" y="26" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="9" font-weight="800" letter-spacing="0.5">Tabléo</text>
+    <!-- QR mini -->
+    <g transform="translate(18,44)">
+      <rect width="74" height="60" rx="4" fill="#07111c" stroke="#1e7ec8" stroke-width="1.2"/>
+      <!-- TL -->
+      <rect x="5" y="5" width="18" height="18" rx="2" fill="none" stroke="#1e7ec8" stroke-width="1.5"/>
+      <rect x="8" y="8" width="12" height="12" rx="1" fill="#1e7ec8"/>
+      <!-- TR -->
+      <rect x="51" y="5" width="18" height="18" rx="2" fill="none" stroke="#1e7ec8" stroke-width="1.5"/>
+      <rect x="54" y="8" width="12" height="12" rx="1" fill="#1e7ec8"/>
+      <!-- BL -->
+      <rect x="5" y="37" width="18" height="18" rx="2" fill="none" stroke="#1e7ec8" stroke-width="1.5"/>
+      <rect x="8" y="40" width="12" height="12" rx="1" fill="#1e7ec8"/>
+      <!-- data dots -->
+      <rect x="28" y="5" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="34" y="5" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="40" y="5" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="28" y="11" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="40" y="11" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="28" y="17" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="34" y="17" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="28" y="28" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="34" y="28" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="46" y="28" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="28" y="34" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="40" y="34" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="28" y="40" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="46" y="40" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="28" y="46" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="34" y="46" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="52" y="34" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="58" y="40" width="4" height="4" fill="#1e7ec8"/>
+      <rect x="64" y="34" width="4" height="4" fill="#1e7ec8"/>
+      <!-- Scan beam -->
+      <rect x="0" y="28" width="74" height="2" fill="url(#s-bl2)" fill-opacity="0.6" rx="1"/>
+    </g>
+    <!-- Table badge -->
+    <rect x="22" y="110" width="66" height="16" rx="8" fill="url(#s-bl)"/>
+    <text x="55" y="122" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="8" font-weight="700">TABLE 5</text>
+  </g>
+
+  <!-- Scan beam from phone to QR -->
+  <path d="M280 250 Q340 300 400 295" stroke="url(#s-bl2)" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.5"/>
+  <!-- Scan spot glow on QR -->
+  <ellipse cx="435" cy="290" rx="50" ry="40" fill="url(#s-spot)" filter="url(#s-blur12)"/>
+
+  <!-- ══ PHONE ══ -->
+  <!-- Phone glow -->
+  <rect x="188" y="28" width="188" height="364" rx="30" fill="#1e7ec8" fill-opacity="0.08" filter="url(#s-blur12)"/>
+  <!-- Phone body -->
+  <rect x="200" y="40" width="164" height="340" rx="24" fill="url(#s-phone)" stroke="#253d58" stroke-width="1.5"/>
+  <rect x="204" y="44" width="156" height="332" rx="22" fill="none" stroke="#1a3555" stroke-width="0.5"/>
+  <!-- Dynamic island -->
+  <rect x="258" y="52" width="68" height="16" rx="8" fill="#050d18"/>
+  <!-- Buttons -->
+  <rect x="198" y="110" width="3.5" height="30" rx="2" fill="#162535"/>
+  <rect x="198" y="150" width="3.5" height="20" rx="2" fill="#162535"/>
+  <rect x="360.5" y="120" width="3.5" height="38" rx="2" fill="#162535"/>
+
+  <!-- SCREEN -->
+  <g clip-path="url(#s-cp)">
+    <rect x="200" y="40" width="164" height="340" fill="#060e1a"/>
+
+    <!-- Camera viewfinder UI overlay -->
+    <!-- Dark vignette -->
+    <rect x="200" y="40" width="164" height="340" fill="#000" fill-opacity="0.35"/>
+
+    <!-- Camera viewfinder frame -->
+    <rect x="218" y="110" width="128" height="128" rx="4" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+    <!-- Corner brackets -->
+    <path d="M218,130 L218,110 L238,110" stroke="#1e7ec8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M326,110 L346,110 L346,130" stroke="#1e7ec8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M218,218 L218,238 L238,238" stroke="#1e7ec8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M346,218 L346,238 L326,238" stroke="#1e7ec8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Scan animation line -->
+    <rect x="222" y="170" width="120" height="2" rx="1" fill="url(#s-bl2)" fill-opacity="0.8"/>
+    <!-- Line glow -->
+    <rect x="222" y="168" width="120" height="6" rx="3" fill="url(#s-bl2)" fill-opacity="0.25" filter="url(#s-blur6)"/>
+
+    <!-- QR code visible inside viewfinder -->
+    <g transform="translate(240, 128)" fill="#1e7ec8" fill-opacity="0.6">
+      <rect x="0" y="0" width="8" height="8" rx="1"/>
+      <rect x="10" y="0" width="8" height="8" rx="1"/>
+      <rect x="0" y="10" width="8" height="8" rx="1"/>
+      <rect x="56" y="0" width="8" height="8" rx="1"/>
+      <rect x="66" y="0" width="8" height="8" rx="1"/>
+      <rect x="56" y="10" width="8" height="8" rx="1"/>
+      <rect x="0" y="56" width="8" height="8" rx="1"/>
+      <rect x="10" y="56" width="8" height="8" rx="1"/>
+      <rect x="0" y="66" width="8" height="8" rx="1"/>
+      <rect x="28" y="28" width="8" height="8" rx="1"/>
+      <rect x="38" y="28" width="8" height="8" rx="1"/>
+      <rect x="28" y="38" width="8" height="8" rx="1"/>
+      <rect x="38" y="38" width="8" height="8" rx="1"/>
+    </g>
+
+    <!-- Status bar -->
+    <text x="212" y="72" fill="rgba(255,255,255,0.85)" font-family="system-ui,sans-serif" font-size="9" font-weight="600">9:41</text>
+    <g fill="rgba(255,255,255,0.65)" transform="translate(332,66)">
+      <rect x="0" y="1" width="3" height="6" rx="0.5"/>
+      <rect x="4" y="-1" width="3" height="8" rx="0.5"/>
+      <rect x="8" y="-3" width="3" height="10" rx="0.5"/>
+    </g>
+
+    <!-- Instruction text -->
+    <text x="282" y="95" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui,sans-serif" font-size="9">Scannez le QR code</text>
+    <text x="282" y="107" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-family="system-ui,sans-serif" font-size="8">Pointez vers le code sur la table</text>
+
+    <!-- Success overlay (partially faded in) -->
+    <rect x="200" y="248" width="164" height="132" fill="#060e1a" fill-opacity="0.92"/>
+
+    <!-- Success icon -->
+    <circle cx="282" cy="278" r="18" fill="#0d2818" stroke="#1a6030" stroke-width="1.5"/>
+    <path d="M272,278 L279,285 L293,271" stroke="#4ade80" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Success text -->
+    <text x="282" y="308" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="10.5" font-weight="700">Table reconnue !</text>
+    <text x="282" y="322" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="system-ui,sans-serif" font-size="8">Le Petit Bistro · Table 5</text>
+
+    <!-- Open menu button -->
+    <rect x="216" y="330" width="132" height="30" rx="10" fill="url(#s-bl)"/>
+    <text x="282" y="349" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="10" font-weight="600">Voir le menu →</text>
+
+    <!-- Home bar -->
+    <rect x="252" y="370" width="60" height="3.5" rx="2" fill="rgba(255,255,255,0.2)"/>
+  </g>
+
+  <!-- ══ FLOATING BADGES ══ -->
+  <!-- Speed badge -->
+  <rect x="30" y="120" width="148" height="52" rx="12" fill="#0c1928" stroke="#1e4878" stroke-width="1"/>
+  <text x="46" y="140" fill="rgba(255,255,255,0.45)" font-family="system-ui,sans-serif" font-size="8.5">Temps de scan</text>
+  <text x="46" y="160" fill="white" font-family="system-ui,sans-serif" font-size="18" font-weight="700">0,3 s</text>
+  <text x="165" y="160" text-anchor="end" fill="#4ade80" font-family="system-ui,sans-serif" font-size="9.5" font-weight="600">⚡ Instantané</text>
+
+  <!-- No app badge -->
+  <rect x="30" y="184" width="148" height="52" rx="12" fill="#0c1928" stroke="#1a3555" stroke-width="1"/>
+  <text x="46" y="204" fill="rgba(255,255,255,0.45)" font-family="system-ui,sans-serif" font-size="8.5">Aucune app requise</text>
+  <text x="46" y="222" fill="white" font-family="system-ui,sans-serif" font-size="12" font-weight="600">Navigateur natif</text>
+  <text x="46" y="235" fill="rgba(255,255,255,0.35)" font-family="system-ui,sans-serif" font-size="8">iOS · Android · tous</text>
+
+  <!-- Scans today badge -->
+  <rect x="462" y="120" width="148" height="52" rx="12" fill="#0c1928" stroke="#1a3555" stroke-width="1"/>
+  <text x="478" y="140" fill="rgba(255,255,255,0.45)" font-family="system-ui,sans-serif" font-size="8.5">Scans aujourd'hui</text>
+  <text x="478" y="160" fill="white" font-family="system-ui,sans-serif" font-size="18" font-weight="700">312</text>
+  <text x="596" y="160" text-anchor="end" fill="#60a5fa" font-family="system-ui,sans-serif" font-size="9.5" font-weight="600">↑ +22%</text>
+
+  <!-- Multi-lang badge -->
+  <rect x="462" y="184" width="148" height="52" rx="12" fill="#0c1928" stroke="#1a3555" stroke-width="1"/>
+  <text x="478" y="204" fill="rgba(255,255,255,0.45)" font-family="system-ui,sans-serif" font-size="8.5">Langues auto-détectées</text>
+  <text x="478" y="222" fill="white" font-family="system-ui,sans-serif" font-size="18" font-weight="700">12+</text>
+  <text x="596" y="222" text-anchor="end" fill="#1e7ec8" font-family="system-ui,sans-serif" font-size="9.5">🌍 IA</text>
+
+  <!-- Decorative dots -->
+  <circle cx="580" cy="58" r="2.5" fill="#1e7ec8" fill-opacity="0.45"/>
+  <circle cx="595" cy="74" r="1.5" fill="#0fa8cc" fill-opacity="0.3"/>
+  <circle cx="568" cy="80" r="1.5" fill="#1e7ec8" fill-opacity="0.3"/>
+  <circle cx="60" cy="58" r="2" fill="#1e7ec8" fill-opacity="0.4"/>
+  <circle cx="44" cy="72" r="1.5" fill="#0fa8cc" fill-opacity="0.28"/>
+</svg>

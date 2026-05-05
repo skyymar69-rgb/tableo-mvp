@@ -1,0 +1,62 @@
+{
+  "name": "DocFlow — L'IA qui fluidifie vos workflows",
+  "short_name": "DocFlow",
+  "description": "Automatisation documentaire intelligente par KAYZEN LYON. Traitement, classification et extraction de données par intelligence artificielle.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d2844",
+  "theme_color": "#1a4a7a",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-192x192.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "DocFlow — Tableau de bord d'automatisation documentaire"
+    }
+  ]
+}
