@@ -99,10 +99,10 @@ export const metadata: Metadata = {
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
-    other: [{ rel: "mask-icon", url: "/favicon-32x32.png", color: "#001e40" }],
+    other: [{ rel: "mask-icon", url: "/favicon-32x32.png", color: "#0070d1" }],
   },
   other: {
-    "msapplication-TileColor": "#001e40",
+    "msapplication-TileColor": "#0070d1",
   },
 };
 

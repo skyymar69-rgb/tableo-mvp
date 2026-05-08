@@ -152,10 +152,10 @@ const HeroSection = () => {
         <div className="animate-fade-up-d7 mt-16 relative mx-auto max-w-5xl">
           <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-white/4 to-transparent pointer-events-none" />
           <HeroImage
-            src="/illus-hero.svg"
-            alt="Smartphone Tabléo affichant un menu QR code avec terminal de paiement en arrière-plan"
-            width={960}
-            height={580}
+            src="/hero-tableo.png"
+            alt="Interface Tabléo — menu digital QR code sur smartphone avec analytics restaurant en arrière-plan"
+            width={2730}
+            height={1536}
             priority
           />
         </div>
