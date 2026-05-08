@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -19,28 +19,29 @@ import { NotificationsDrawer } from "./NotificationsDrawer";
 
 const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean);
 
-const navItems = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { label: "Menu", href: "/menu", icon: UtensilsCrossed },
-  { label: "QR Codes", href: "/qr", icon: QrCode },
-  { label: "Tables", href: "/tables", icon: TableIcon },
-  { label: "Commandes", href: "/orders", icon: ShoppingBag },
-  { label: "CRM", href: "/crm", icon: Users },
-  { label: "Équipe", href: "/staff", icon: Users2 },
-  { label: "Paramètres", href: "/settings", icon: Settings },
-];
+/* #30 — useMemo pour navItems : jamais recréés */
+const NAV_ITEMS = [
+  { label: "Dashboard",   href: "/dashboard", icon: LayoutDashboard },
+  { label: "Analytics",   href: "/analytics", icon: BarChart3 },
+  { label: "Menu",        href: "/menu",       icon: UtensilsCrossed },
+  { label: "QR Codes",    href: "/qr",         icon: QrCode },
+  { label: "Tables",      href: "/tables",     icon: TableIcon },
+  { label: "Commandes",   href: "/orders",     icon: ShoppingBag },
+  { label: "CRM",         href: "/crm",        icon: Users },
+  { label: "Équipe",      href: "/staff",      icon: Users2 },
+  { label: "Paramètres",  href: "/settings",   icon: Settings },
+] as const;
 
 const TIER_LABELS: Record<string, { label: string; icon: any; color: string }> = {
-  FREE: { label: "Gratuit", icon: Zap, color: "text-muted-foreground" },
-  GROWTH: { label: "Growth", icon: ArrowUpRight, color: "text-blue-400" },
-  ENTERPRISE: { label: "Enterprise", icon: Crown, color: "text-purple-400" },
+  FREE:       { label: "Gratuit",    icon: Zap,         color: "text-muted-foreground" },
+  GROWTH:     { label: "Growth",     icon: ArrowUpRight, color: "text-blue-400" },
+  ENTERPRISE: { label: "Enterprise", icon: Crown,        color: "text-purple-400" },
 };
 
 const STATUS_DOT: Record<string, string> = {
-  ACTIVE: "bg-emerald-400",
+  ACTIVE:     "bg-emerald-400",
   ONBOARDING: "bg-yellow-400",
-  SUSPENDED: "bg-red-400",
+  SUSPENDED:  "bg-red-400",
 };
 
 export function Sidebar() {
@@ -69,26 +70,52 @@ export function Sidebar() {
     staleTime: 300_000,
   });
 
-  const handleCollapse = (v: boolean) => {
+  /* #31 — commandes en attente pour badge */
+  const { data: pendingOrders } = useQuery({
+    queryKey: ["pending-orders-count"],
+    queryFn: async () => {
+      const res = await fetch("/api/orders?status=PENDING&count=1");
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return data.count ?? 0;
+    },
+    refetchInterval: 30_000,
+    staleTime: 20_000,
+  });
+
+  /* #28 — useCallback pour tous les handlers */
+  const handleCollapse = useCallback((v: boolean) => {
     setCollapsed(v);
     if (typeof window !== "undefined") {
       localStorage.setItem("sidebar-collapsed", String(v));
     }
-  };
+  }, []);
+
+  const handleClickOutside = useCallback((e: MouseEvent) => {
+    if (switcherRef.current && !switcherRef.current.contains(e.target as Node)) {
+      setShowSwitcher(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (restaurant && !activeRestaurantId) setActiveRestaurantId(restaurant.id);
   }, [restaurant, activeRestaurantId]);
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (switcherRef.current && !switcherRef.current.contains(e.target as Node)) {
-        setShowSwitcher(false);
-      }
-    }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [handleClickOutside]);
+
+  /* #29 — Escape ferme le restaurant switcher */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showSwitcher) {
+        setShowSwitcher(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [showSwitcher]);
 
   const user = session?.user;
   const userRole = (user as any)?.role as string ?? "OWNER";
@@ -100,9 +127,14 @@ export function Sidebar() {
 
   const isAdmin = userRole === "ADMIN" || ADMIN_EMAILS.includes(userEmail);
 
-  /* #35 — Lire le tier depuis restaurant (source de vérité) pas depuis la session */
   const tier = (activeRestaurant as any)?.subscription?.tier ?? (activeRestaurant as any)?.tier ?? "FREE";
   const tierConfig = TIER_LABELS[tier] ?? TIER_LABELS.FREE;
+
+  /* #30 — navItems stable via useMemo — badge commandes sur /orders */
+  const navItems = useMemo(() => NAV_ITEMS.map((item) => ({
+    ...item,
+    badge: item.href === "/orders" && (pendingOrders ?? 0) > 0 ? pendingOrders : null,
+  })), [pendingOrders]);
 
   return (
     <>
@@ -110,7 +142,7 @@ export function Sidebar() {
     <aside
       aria-label="Menu de navigation"
       className={cn(
-        "relative hidden md:flex flex-col h-screen border-r border-border bg-sidebar transition-all duration-300 ease-in-out shrink-0",
+        "relative hidden md:flex flex-col h-screen border-r border-border bg-sidebar transition-all duration-300 ease-in-out shrink-0 sidebar-contained",
         collapsed ? "w-16" : "w-60"
       )}
     >
@@ -149,7 +181,7 @@ export function Sidebar() {
               id="restaurant-switcher-list"
               role="listbox"
               aria-label="Choisir un restaurant"
-              className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl border border-border bg-card shadow-lg overflow-hidden"
+              className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl border border-border bg-card shadow-lg overflow-hidden animate-slide-down"
             >
               <div className="p-1 space-y-0.5">
                 {(allRestaurants ?? [restaurant]).filter(Boolean).map((r: any) => (
@@ -174,7 +206,6 @@ export function Sidebar() {
                 ))}
               </div>
               <div className="border-t border-border p-1">
-                {/* #36 — Lien fonctionnel vers la création de restaurant */}
                 <a
                   href="/settings?tab=restaurant&action=new"
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus-ring"
@@ -213,12 +244,28 @@ export function Sidebar() {
                   "w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110",
                   isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
                 )} />
-                {!collapsed && <span className="transition-all duration-200">{item.label}</span>}
+                {!collapsed && <span className="transition-all duration-200 flex-1">{item.label}</span>}
+
+                {/* #31 — Badge commandes en attente */}
+                {item.badge && !collapsed && (
+                  <span className={cn(
+                    "ml-auto min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold px-1",
+                    isActive
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-primary text-primary-foreground"
+                  )}>
+                    {(item.badge as number) > 99 ? "99+" : item.badge}
+                  </span>
+                )}
+                {item.badge && collapsed && (
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-primary border-2 border-sidebar" />
+                )}
               </Link>
               {collapsed && (
                 <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-150">
-                  <div className="rounded-lg bg-popover border border-border px-2.5 py-1.5 text-xs font-medium text-foreground shadow-card whitespace-nowrap">
+                  <div className="tooltip-base">
                     {item.label}
+                    {item.badge ? ` (${item.badge})` : ""}
                   </div>
                 </div>
               )}
@@ -226,7 +273,7 @@ export function Sidebar() {
           );
         })}
 
-        {/* Admin link — visible uniquement pour les admins */}
+        {/* Admin link */}
         {isAdmin && (
           <div className="relative group/tooltip mt-2">
             <div className={cn(!collapsed && "px-3 pt-1 pb-1")}>
@@ -252,9 +299,7 @@ export function Sidebar() {
             </Link>
             {collapsed && (
               <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-150">
-                <div className="rounded-lg bg-popover border border-border px-2.5 py-1.5 text-xs font-medium text-foreground shadow-card whitespace-nowrap">
-                  Panneau Admin
-                </div>
+                <div className="tooltip-base">Panneau Admin</div>
               </div>
             )}
           </div>
@@ -279,13 +324,15 @@ export function Sidebar() {
       <div className="border-t border-border p-3 space-y-1">
         {!collapsed && (
           <>
+            {/* #32 — hint ⌘K dans le bouton recherche */}
             <button
               onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
-              className="w-full flex items-center gap-2 rounded-lg bg-secondary/60 border border-border px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors mb-1"
+              aria-label="Ouvrir la palette de commandes (⌘K)"
+              className="w-full flex items-center gap-2 rounded-lg bg-secondary/60 border border-border px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors mb-1 group"
             >
               <Search className="w-3.5 h-3.5 shrink-0" />
               <span className="flex-1 text-left">Rechercher...</span>
-              <kbd className="text-[10px] border border-border rounded px-1 py-0.5 shrink-0">⌘K</kbd>
+              <kbd className="text-[10px] border border-border rounded px-1 py-0.5 shrink-0 group-hover:border-primary/30 transition-colors">⌘K</kbd>
             </button>
             <div className="flex items-center gap-2 px-1 py-1">
               <NotificationsDrawer />
@@ -338,7 +385,7 @@ export function Sidebar() {
         aria-label={collapsed ? "Développer la barre latérale" : "Réduire la barre latérale"}
         aria-pressed={collapsed}
         aria-expanded={!collapsed}
-        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors z-10 focus-ring"
+        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 hover:bg-primary/5 transition-all z-10 focus-ring shadow-sm"
       >
         {collapsed ? <ChevronRight className="w-3 h-3" aria-hidden="true" /> : <ChevronLeft className="w-3 h-3" aria-hidden="true" />}
       </button>

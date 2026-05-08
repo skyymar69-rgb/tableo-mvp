@@ -33,29 +33,29 @@ const engines = [
 ];
 
 const RevenueSection = () => (
-  <section id="revenue" className="py-24 md:py-32 border-t border-border/50 relative overflow-hidden">
-    {/* 25. Subtle pattern bg */}
-    <div className="absolute inset-0 opacity-[0.02]" style={{
-      backgroundImage: 'radial-gradient(circle at 1px 1px, hsl(210, 40%, 96%) 1px, transparent 0)',
-      backgroundSize: '40px 40px'
-    }} />
-    <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/5 blur-[140px]" />
+  <section id="revenue" className="py-24 md:py-32 bg-[#000] relative overflow-hidden">
+    {/* Structural blue glow from left */}
+    <div
+      className="absolute inset-y-0 left-0 w-[600px] pointer-events-none"
+      style={{ background: "radial-gradient(ellipse 70% 60% at 0% 50%, rgba(0,112,209,0.08), transparent)" }}
+      aria-hidden="true"
+    />
+
     <div className="container mx-auto px-6 relative">
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <p className="text-sm font-semibold text-accent mb-3 tracking-wide uppercase">Revenue Engine</p>
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
+        <p className="text-[11px] font-semibold text-[#0070d1] mb-3 tracking-widest uppercase">Revenue Engine</p>
+        <h2 className="text-[clamp(1.8rem,4vw,3rem)] font-light tracking-tight text-white">
           Pas juste un menu.{" "}
-          <span className="text-gradient-warm font-serif italic font-normal">Un moteur de revenus.</span>
+          <span className="text-[#0070d1] italic">Un moteur de revenus.</span>
         </h2>
-        <p className="mt-4 text-muted-foreground text-lg">
+        <p className="mt-4 text-[15px] text-[#a8a8b3]">
           Chaque interaction client est une opportunité de revenus. Tableo les capture toutes.
         </p>
       </div>
 
       {/* Analytics illustration */}
-      <div className="max-w-4xl mx-auto mb-12 relative">
-        <div className="absolute -inset-3 rounded-2xl bg-gradient-warm-subtle blur-xl opacity-60" />
-        <div className="relative rounded-2xl border border-primary/20 overflow-hidden shadow-card">
+      <div className="max-w-4xl mx-auto mb-12">
+        <div className="rounded-[8px] border border-white/8 overflow-hidden">
           <Image
             src="/illus-analytics.svg"
             alt="Dashboard analytique Tabléo : revenus, commandes et scans QR en temps réel"
@@ -66,28 +66,23 @@ const RevenueSection = () => (
         </div>
       </div>
 
-      {/* 23. Counter animation feel, 24. Connecting accent lines, 26. Card hover scale + glow */}
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        {engines.map((e, i) => (
+      <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+        {engines.map((e) => (
           <div
             key={e.title}
-            className="group rounded-2xl glass-warm p-8 transition-all duration-500 hover:-translate-y-2 hover:shadow-glow-warm relative overflow-hidden"
+            className="group rounded-[8px] border border-white/8 bg-[#121314] p-8 hover:border-[#0070d1]/30 transition-colors duration-200"
           >
-            {/* Subtle background orb on hover */}
-            <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-primary/0 group-hover:bg-primary/10 blur-3xl transition-all duration-700" />
-            <div className="relative">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-warm flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
-                  <e.icon className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-gradient-warm">{e.metric}</div>
-                  <div className="text-xs text-muted-foreground">{e.metricLabel}</div>
-                </div>
+            <div className="flex items-start justify-between mb-5">
+              <div className="w-11 h-11 rounded-[8px] bg-[#0070d1]/10 flex items-center justify-center group-hover:bg-[#0070d1] transition-colors duration-200">
+                <e.icon className="w-5 h-5 text-[#0070d1] group-hover:text-white transition-colors duration-200" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">{e.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{e.desc}</p>
+              <div className="text-right">
+                <div className="text-3xl font-light text-white">{e.metric}</div>
+                <div className="text-[11px] text-[#a8a8b3]">{e.metricLabel}</div>
+              </div>
             </div>
+            <h3 className="text-[15px] font-semibold text-white mb-2">{e.title}</h3>
+            <p className="text-[13px] text-[#a8a8b3] leading-relaxed">{e.desc}</p>
           </div>
         ))}
       </div>

@@ -51,6 +51,21 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        /* PlayStation Design System palette */
+        ps: {
+          primary:  "#0070d1",
+          hover:    "#0082f0",
+          commerce: "#d53b00",
+          dark:     "#000000",
+          elevated: "#121314",
+          surface:  "#1e2022",
+          light:    "#ffffff",
+          "light-2":"#f5f7fa",
+          "light-3":"#e8eaed",
+          text:     "#f0f0f0",
+          "text-2": "#a8a8b3",
+          gold:     "#f0c040",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -75,6 +90,16 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      /* #13 — fontSize.xxs pour labels ultra-compacts */
+      fontSize: {
+        xxs: ["0.625rem", { lineHeight: "0.875rem" }],
+      },
+      /* #14 — timing functions personnalisées */
+      transitionTimingFunction: {
+        "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "smooth": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "bounce": "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+      },
     },
   },
   /* #39 — Safelist pour classes dynamiques construites via template literals */
@@ -85,12 +110,28 @@ export default {
     "bg-emerald-400/15","text-emerald-400",
     "bg-red-400/15",    "text-red-400",
     "bg-orange-400/15", "text-orange-400",
+    // #15 — couleurs activité feed
+    "bg-purple-500/20", "text-purple-400",
+    "bg-yellow-500/20", "text-yellow-400",
+    "bg-blue-500/20",   "text-blue-400",
+    "bg-emerald-500/20","text-emerald-400",
     // Badge variants — @layer utilities dans globals.css
     "badge-success", "badge-warning", "badge-error", "badge-info",
     // Tier colors in sidebar
     "text-purple-400", "text-blue-400",
     // Gradient warm subtle
     "bg-gradient-warm-subtle",
+    // Chip & interactive
+    "chip", "btn-ghost", "card-interactive",
+    // Text sizes
+    "text-xxs",
+    // PS Design System band + button classes
+    "band-dark", "band-light", "band-blue",
+    "btn-ps-primary", "btn-ps-commerce", "btn-ps-secondary-dark", "btn-ps-secondary-light",
+    "ps-card", "ps-card-dark",
+    "ps-display-xl", "ps-display-lg", "ps-display-md",
+    "ps-body-lg", "ps-body",
+    "ps-badge", "ps-hairline",
   ],
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;

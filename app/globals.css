@@ -145,6 +145,13 @@ html { scroll-behavior: smooth; }
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-outfit, 'Outfit'), system-ui, sans-serif;
+    /* #A1 — text-balance évite les orphelins typographiques */
+    text-wrap: balance;
+  }
+  /* #A2 — placeholder cohérent multi-navigateurs */
+  ::placeholder {
+    color: hsl(var(--muted-foreground));
+    opacity: 0.55;
   }
 }
 
@@ -316,6 +323,15 @@ html { scroll-behavior: smooth; }
 
 /* ── Keyframes ── */
 @keyframes fadeUp      { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+/* #A11 — slideDown pour dropdowns et accordéons */
+@keyframes slideDown   { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+.animate-slide-down    { animation: slideDown 0.18s cubic-bezier(0.34,1.2,0.64,1) forwards; }
+/* #A12 — glowRingPulse pour éléments featured */
+@keyframes glowRingPulse {
+  0%   { box-shadow: 0 0 0 0 hsl(212,100%,13%,0.25); }
+  70%  { box-shadow: 0 0 0 8px hsl(212,100%,13%,0); }
+  100% { box-shadow: 0 0 0 0 hsl(212,100%,13%,0); }
+}
 @keyframes float       { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-12px); } }
 @keyframes pulseSlow   { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 @keyframes shimmer     { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
@@ -331,7 +347,6 @@ html { scroll-behavior: smooth; }
 }
 @keyframes ping        { 75%, 100% { transform: scale(2); opacity: 0; } }
 .animate-ping          { animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite; }
-@keyframes scaleIn     { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
 .animate-scale-in      { animation: scaleIn 0.22s cubic-bezier(0.34,1.56,0.64,1) forwards; }
 
 /* Staggered page entry */
@@ -389,6 +404,55 @@ html { scroll-behavior: smooth; }
   .badge-danger  { @apply inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-500/15 text-red-500; }
   .badge-primary { @apply inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary; }
   .badge-neutral { @apply inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground; }
+  /* #A3 — badge-info manquant (référencé dans safelist) */
+  .badge-info    { @apply inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-500; }
+
+  /* #A4 — .chip : label interactif compact */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground transition-all duration-150 cursor-pointer select-none;
+  }
+  .chip:hover { @apply border-primary/30 text-foreground bg-secondary/80; }
+  .chip[aria-selected="true"] { @apply border-primary/40 bg-primary/10 text-primary; }
+
+  /* #A5 — .btn-ghost : bouton sans fond */
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all duration-150 cursor-pointer select-none;
+  }
+  .btn-ghost:hover { @apply bg-secondary text-foreground; }
+  .btn-ghost:active { transform: scale(0.97); }
+
+  /* #A6 — .stat-value : chiffres KPI avec tabular-nums */
+  .stat-value {
+    @apply text-2xl font-bold text-foreground tabular-nums;
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* #A7 — .section-eyebrow : label catégorie de section */
+  .section-eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-widest mb-4;
+  }
+
+  /* #A8 — .card-interactive : card cliquable avec feedback */
+  .card-interactive {
+    @apply rounded-2xl border border-border bg-gradient-card transition-all duration-200 cursor-pointer;
+  }
+  .card-interactive:hover {
+    @apply border-primary/25 -translate-y-0.5;
+    box-shadow: var(--shadow-card);
+  }
+  .card-interactive:active { transform: translateY(0) scale(0.99); }
+
+  /* #A9 — .glow-ring : animation de pulsation pour les éléments featured */
+  .glow-ring {
+    box-shadow: 0 0 0 0 hsl(var(--primary), 0.4);
+    animation: glowRingPulse 2.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+  }
+
+  /* #A10 — .tooltip-base : tooltip cohérent */
+  .tooltip-base {
+    @apply rounded-lg bg-popover border border-border px-2.5 py-1.5 text-xs font-medium text-foreground shadow-card whitespace-nowrap;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -545,6 +609,330 @@ html {
 
 /* ── Mobile safe area ── */
 .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PLAYSTATION DESIGN SYSTEM — Tableo landing layer
+ * Chapter-band rhythm: dark → light → dark → light → blue → blue
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Brand ── */
+  --ps-primary:            #0070d1;
+  --ps-primary-pressed:    #0064b7;
+  --ps-primary-active:     #004d8d;
+  --ps-commerce:           #d53b00;
+  --ps-commerce-pressed:   #aa2f00;
+
+  /* ── Surfaces ── */
+  --ps-canvas-dark:        #000000;
+  --ps-elevated:           #121314;
+  --ps-card-dark:          #181818;
+  --ps-canvas-light:       #ffffff;
+  --ps-surface-soft:       #f3f3f3;
+  --ps-surface-card:       #f5f7fa;
+  --ps-hairline-light:     #f3f3f3;
+  --ps-hairline-dark:      rgba(229,229,229,0.2);
+
+  /* ── Text on dark ── */
+  --ps-on-dark:            #ffffff;
+  --ps-body-dark:          rgba(255,255,255,0.70);
+  --ps-mute-dark:          rgba(229,229,229,0.55);
+  --ps-on-dark-mute:       #cccccc;
+
+  /* ── Text on light ── */
+  --ps-ink:                #000000;
+  --ps-body-light:         rgba(0,0,0,0.60);
+  --ps-mute-light:         #6b6b6b;
+  --ps-ash-light:          #cccccc;
+
+  /* ── Links ── */
+  --ps-link-light:         #0064b7;
+  --ps-link-dark:          #53b1ff;
+
+  /* ── PS Plus gold gradient ── */
+  --ps-gold-start:         #ffce21;
+  --ps-gold-mid:           #f5a623;
+  --ps-gold-end:           #ee8e00;
+
+  /* ── Section rhythm ── */
+  --ps-section-y:          96px;
+  --ps-section-x:          48px;
+}
+
+/* ── Band system — full-bleed chapter surfaces ── */
+.band-dark {
+  background-color: var(--ps-canvas-dark);
+  color: var(--ps-on-dark);
+  padding: var(--ps-section-y) 0;
+}
+.band-dark-elevated {
+  background-color: var(--ps-elevated);
+  color: var(--ps-on-dark);
+  padding: var(--ps-section-y) 0;
+}
+.band-light {
+  background-color: var(--ps-canvas-light);
+  color: var(--ps-ink);
+  padding: var(--ps-section-y) 0;
+}
+.band-blue {
+  background-color: var(--ps-primary);
+  color: #ffffff;
+  padding: var(--ps-section-y) 0;
+}
+
+@media (max-width: 768px) {
+  .band-dark, .band-dark-elevated, .band-light, .band-blue {
+    padding: 64px 0;
+  }
+}
+@media (max-width: 480px) {
+  .band-dark, .band-dark-elevated, .band-light, .band-blue {
+    padding: 48px 0;
+  }
+}
+
+/* ── PS Typography — display tier at weight 300 ── */
+.ps-display-xl {
+  font-family: var(--font-outfit, 'Outfit'), system-ui, sans-serif;
+  font-size: clamp(32px, 5vw, 54px);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.1px;
+}
+.ps-display-lg {
+  font-family: var(--font-outfit, 'Outfit'), system-ui, sans-serif;
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: 0.1px;
+}
+.ps-display-md {
+  font-family: var(--font-outfit, 'Outfit'), system-ui, sans-serif;
+  font-size: clamp(24px, 3vw, 35px);
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+.ps-heading-xl {
+  font-family: var(--font-outfit, 'Outfit'), system-ui, sans-serif;
+  font-size: clamp(20px, 2.5vw, 28px);
+  font-weight: 300;
+  line-height: 1.25;
+  letter-spacing: 0.1px;
+}
+.ps-heading-lg {
+  font-family: var(--font-outfit, 'Outfit'), system-ui, sans-serif;
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 300;
+  line-height: 1.25;
+  letter-spacing: 0.1px;
+}
+.ps-heading-md {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+}
+.ps-body {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.1px;
+}
+.ps-body-sm {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+.ps-caption {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+.ps-caption-sm {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+/* Accent em — PS Blue on dark or light */
+.ps-accent        { color: var(--ps-primary); }
+.ps-accent-dark   { color: var(--ps-link-dark); }
+.ps-body-on-dark  { color: var(--ps-body-dark); }
+.ps-mute-on-dark  { color: var(--ps-mute-dark); }
+.ps-body-on-light { color: var(--ps-body-light); }
+.ps-mute-on-light { color: var(--ps-mute-light); }
+
+/* ── PS Buttons — pill geometry at 9999px ── */
+.btn-ps {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 28px;
+  border-radius: 9999px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.45px;
+  line-height: 1;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: background-color 0.12s ease, transform 0.1s ease, opacity 0.12s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+.btn-ps:active { transform: scale(0.97); }
+.btn-ps:focus-visible {
+  outline: 3px solid var(--ps-primary);
+  outline-offset: 3px;
+}
+
+.btn-ps-primary {
+  background: var(--ps-primary);
+  color: #ffffff;
+}
+.btn-ps-primary:hover   { opacity: 0.92; }
+.btn-ps-primary:active  { background: var(--ps-primary-pressed); }
+
+.btn-ps-commerce {
+  background: var(--ps-commerce);
+  color: #ffffff;
+}
+.btn-ps-commerce:hover  { opacity: 0.90; }
+.btn-ps-commerce:active { background: var(--ps-commerce-pressed); }
+
+.btn-ps-secondary-dark {
+  background: transparent;
+  color: #ffffff;
+  border: 1.5px solid var(--ps-hairline-dark);
+}
+.btn-ps-secondary-dark:hover { background: rgba(255,255,255,0.08); }
+
+.btn-ps-secondary-light {
+  background: transparent;
+  color: var(--ps-ink);
+  border: 1.5px solid var(--ps-ash-light);
+}
+.btn-ps-secondary-light:hover { background: var(--ps-surface-soft); }
+
+.btn-ps-white {
+  background: #ffffff;
+  color: var(--ps-primary);
+}
+.btn-ps-white:hover { opacity: 0.90; }
+
+/* ── PS Cards ── */
+.ps-card {
+  background: var(--ps-surface-card);
+  border-radius: 8px;
+  padding: 24px;
+}
+.ps-card-dark {
+  background: var(--ps-card-dark);
+  border-radius: 8px;
+  padding: 24px;
+}
+.ps-card-elevated {
+  background: var(--ps-elevated);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+/* Hairline border variants */
+.ps-card-bordered         { border: 1px solid var(--ps-hairline-light); }
+.ps-card-dark-bordered    { border: 1px solid var(--ps-hairline-dark); }
+
+/* Lift on press only */
+.ps-card:active, .ps-card-dark:active {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.16);
+}
+
+/* ── PS Filter chip ── */
+.ps-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  background: rgba(245,247,250,0.3);
+  color: var(--ps-ink);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.324px;
+  cursor: pointer;
+  transition: background 0.12s;
+  border: none;
+  white-space: nowrap;
+}
+.ps-chip-active {
+  background: var(--ps-canvas-light);
+}
+
+/* ── PS Nav ── */
+.ps-nav {
+  background: var(--ps-canvas-dark);
+  color: var(--ps-on-dark);
+  height: 56px;
+}
+
+/* ── PS Footer ── */
+.ps-footer {
+  background: var(--ps-primary);
+  color: rgba(255,255,255,0.85);
+}
+
+/* ── PS Plus gold gradient ── */
+.ps-plus-gradient {
+  background: linear-gradient(90deg, var(--ps-gold-start) 0%, var(--ps-gold-mid) 50%, var(--ps-gold-end) 100%);
+}
+
+/* ── PS hairline divider ── */
+.ps-divider-light { border-top: 1px solid var(--ps-hairline-light); }
+.ps-divider-dark  { border-top: 1px solid var(--ps-hairline-dark); }
+
+/* ── ON PLAYSTATION gradient band (dark top → deeper bottom) ── */
+.band-dark-gradient {
+  background: linear-gradient(180deg, var(--ps-elevated) 0%, var(--ps-canvas-dark) 100%);
+  color: var(--ps-on-dark);
+  padding: var(--ps-section-y) 0;
+}
+
+/* ── PS Game tile 16:9 ── */
+.ps-tile {
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--ps-card-dark);
+}
+
+/* ── Badge pills ── */
+.ps-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background: var(--ps-primary);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.ps-badge-gold {
+  background: var(--ps-gold-start);
+  color: #000;
+}
+
+/* ── Inline links ── */
+.ps-link-light { color: var(--ps-link-light); text-decoration: none; }
+.ps-link-light:hover { text-decoration: underline; }
+.ps-link-dark  { color: var(--ps-link-dark); text-decoration: none; }
+.ps-link-dark:hover  { text-decoration: underline; }
 
 /* ── #41 Print CSS premium QR ── */
 @media print {

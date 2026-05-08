@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { ChevronDown, MessageCircle } from "lucide-react";
+import Link from "next/link";
 
 const FAQS = [
   {
@@ -33,57 +34,113 @@ const FAQS = [
   },
 ];
 
+function AccordionItem({
+  faq, index, isOpen, onToggle,
+}: {
+  faq: { q: string; a: string };
+  index: number;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const panelId = `faq-panel-${index}`;
+  const headerId = `faq-header-${index}`;
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    if (isOpen) {
+      el.style.maxHeight = `${el.scrollHeight}px`;
+      el.style.opacity = "1";
+    } else {
+      el.style.maxHeight = "0px";
+      el.style.opacity = "0";
+    }
+  }, [isOpen]);
+
+  return (
+    <div
+      role="listitem"
+      className={`rounded-[8px] border bg-white transition-colors duration-150 overflow-hidden ${
+        isOpen ? "border-[#0070d1]/40" : "border-[#e8eaed] hover:border-[#c8d0da]"
+      }`}
+    >
+      <h3>
+        <button
+          id={headerId}
+          onClick={onToggle}
+          className="w-full flex items-center justify-between gap-4 px-6 py-4 text-left hover:bg-[#f5f7fa] transition-colors focus-ring rounded-[8px]"
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+        >
+          <span className="text-[14px] font-semibold text-[#0a0a0a]">{faq.q}</span>
+          <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors duration-150 ${
+            isOpen ? "bg-[#0070d1]/10" : "bg-[#f5f7fa]"
+          }`}>
+            <ChevronDown
+              className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-180 text-[#0070d1]" : "text-[#6b7280]"}`}
+              aria-hidden="true"
+            />
+          </div>
+        </button>
+      </h3>
+      <div
+        ref={bodyRef}
+        id={panelId}
+        role="region"
+        aria-labelledby={headerId}
+        style={{
+          maxHeight: "0px",
+          opacity: "0",
+          overflow: "hidden",
+          transition: "max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease",
+        }}
+      >
+        <p className="px-6 pb-5 text-[13px] text-[#6b7280] leading-relaxed border-t border-[#e8eaed] pt-4">
+          {faq.a}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function FAQSection() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="py-24 md:py-32 border-t border-border/50">
+    <section id="faq" className="py-24 md:py-32 bg-[#f5f7fa]">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <p className="text-sm font-semibold text-primary mb-3 tracking-wide uppercase">FAQ</p>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
+          <p className="text-[11px] font-semibold text-[#0070d1] mb-3 tracking-widest uppercase">FAQ</p>
+          <h2 className="text-[clamp(1.8rem,4vw,3rem)] font-light tracking-tight text-[#0a0a0a]">
             Questions fréquentes
           </h2>
+          <p className="mt-4 text-[#6b7280] text-[14px]">
+            Tout ce que vous devez savoir avant de démarrer.
+          </p>
         </div>
-        {/* #50 — accordion WCAG 2.1 : aria-controls + id panel + aria-expanded */}
+
         <div className="max-w-2xl mx-auto space-y-2" role="list">
-          {FAQS.map((faq, i) => {
-            const panelId = `faq-panel-${i}`;
-            const headerId = `faq-header-${i}`;
-            const isOpen = open === i;
-            return (
-              <div
-                key={i}
-                role="listitem"
-                className="rounded-2xl border border-border bg-gradient-card overflow-hidden transition-all duration-200"
-              >
-                <h3>
-                  <button
-                    id={headerId}
-                    onClick={() => setOpen(isOpen ? null : i)}
-                    className="w-full flex items-center justify-between gap-4 px-6 py-4 text-left hover:bg-secondary/30 transition-colors focus-ring rounded-2xl"
-                    aria-expanded={isOpen}
-                    aria-controls={panelId}
-                  >
-                    <span className="text-sm font-semibold text-foreground">{faq.q}</span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                      aria-hidden="true"
-                    />
-                  </button>
-                </h3>
-                <div
-                  id={panelId}
-                  role="region"
-                  aria-labelledby={headerId}
-                  hidden={!isOpen}
-                  className={`px-6 pb-5 text-sm text-muted-foreground leading-relaxed border-t border-border/50 pt-4 ${isOpen ? "" : "hidden"}`}
-                >
-                  {faq.a}
-                </div>
-              </div>
-            );
-          })}
+          {FAQS.map((faq, i) => (
+            <AccordionItem
+              key={i}
+              faq={faq}
+              index={i}
+              isOpen={open === i}
+              onToggle={() => setOpen(open === i ? null : i)}
+            />
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <p className="text-[13px] text-[#6b7280] mb-3">Vous ne trouvez pas la réponse à votre question ?</p>
+          <Link
+            href="/contact"
+            className="inline-flex items-center gap-2 rounded-full border border-[#e8eaed] bg-white px-5 py-2.5 text-[13px] font-medium text-[#0a0a0a] hover:border-[#0070d1]/40 hover:text-[#0070d1] transition-all focus-ring group"
+          >
+            <MessageCircle className="w-4 h-4 text-[#6b7280] group-hover:text-[#0070d1] transition-colors" />
+            Contacter l&apos;équipe
+          </Link>
         </div>
       </div>
     </section>
