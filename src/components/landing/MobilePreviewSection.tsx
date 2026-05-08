@@ -1,7 +1,7 @@
 "use client";
 
 import { Heart, Plus, Star, Globe2, Wifi, Battery, Signal } from "lucide-react";
-import Image from "next/image";
+import { Illustration } from "./Illustration";
 
 const dishes = [
   { img: "/placeholder.svg", name: "Saumon Mi-Cuit", desc: "Micro-pousses, crème citronnée", price: "24€", tag: "Populaire", rating: "4.9" },
@@ -42,18 +42,19 @@ const MobilePreviewSection = () => (
         </div>
 
         <div className="flex flex-col items-center gap-6">
-          {/* QR scan illustration */}
-          <div className="relative w-full max-w-[320px]">
+          {/* Illustration : Menu IA Multilingue (page 5 PDF Tabléo) */}
+          <figure className="relative w-full max-w-[320px]">
             <div className="rounded-[12px] border border-[#e5e7eb] overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
-              <Image
-                src="/illus-scan.svg"
-                alt="Client scannant un QR code Tabléo sur sa table de restaurant"
-                width={640}
-                height={420}
-                className="w-full h-auto"
+              <Illustration
+                slug="menu-ia-multilingue"
+                alt="Menu IA multilingue Tabléo affiché sur smartphone — traduction automatique en français, espagnol, anglais et chinois pour clients internationaux dans un restaurant"
+                sizes="(max-width: 640px) 100vw, 320px"
               />
             </div>
-          </div>
+            <figcaption className="sr-only">
+              Aperçu du menu IA multilingue Tabléo sur smartphone : détection automatique de la langue du client.
+            </figcaption>
+          </figure>
 
           {/* Phone mockup */}
           <div className="relative w-[300px] group">

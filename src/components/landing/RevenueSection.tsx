@@ -1,5 +1,5 @@
 import { TrendingUp, Sparkles, Clock, Target } from "lucide-react";
-import Image from "next/image";
+import { Illustration } from "./Illustration";
 
 const engines = [
   {
@@ -46,18 +46,16 @@ const RevenueSection = () => (
         </p>
       </div>
 
-      {/* Analytics illustration */}
-      <div className="max-w-4xl mx-auto mb-12">
+      {/* Illustration : tableau de bord performance restaurant */}
+      <figure className="max-w-md mx-auto mb-12">
         <div className="rounded-[16px] border border-[#e5e7eb] overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
-          <Image
-            src="/illus-analytics.svg"
-            alt="Dashboard analytique Tabléo : revenus, commandes et scans QR en temps réel"
-            width={760}
-            height={440}
-            className="w-full h-auto"
+          <Illustration
+            slug="analytics-dashboard"
+            alt="Tableau de bord analytique Tabléo affiché sur écran d'ordinateur — KPI temps réel : CRM client, revenus par table, performance des plats et fréquentation pour piloter un restaurant"
+            sizes="(max-width: 768px) 100vw, 480px"
           />
         </div>
-      </div>
+      </figure>
 
       <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
         {engines.map((e) => (
