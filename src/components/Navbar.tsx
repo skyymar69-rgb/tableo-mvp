@@ -3,14 +3,19 @@
 import { useState, useEffect, useId } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon, QrCode } from "lucide-react";
+import { useTheme } from "next-themes";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const isLanding = pathname === "/";
   const mobileMenuId = useId();
+  const { theme, setTheme } = useTheme();
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -30,10 +35,12 @@ export default function Navbar() {
     { label: "Tarifs", href: "#pricing" },
   ];
 
+  const isDark = theme === "dark";
+
   return (
     <nav
       aria-label="Navigation principale"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#000] ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#000] dark:bg-[#000] ${
         scrolled ? "border-b border-white/8" : "border-b border-transparent"
       }`}
     >
@@ -62,7 +69,32 @@ export default function Navbar() {
         )}
 
         {/* Desktop CTA */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-3">
+          {/* Carte de contact numérique */}
+          <Link
+            href="/contact-card"
+            className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#a8a8b3] hover:text-white hover:border-white/20 focus-ring transition-all"
+            aria-label="Carte de contact numérique et QR code"
+            title="Carte de contact"
+          >
+            <QrCode className="w-4 h-4" aria-hidden="true" />
+          </Link>
+
+          {/* Theme toggle */}
+          {mounted && (
+            <button
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#a8a8b3] hover:text-white hover:border-white/20 focus-ring transition-all"
+              aria-label={isDark ? "Passer en mode clair" : "Passer en mode sombre"}
+              aria-pressed={isDark}
+            >
+              {isDark
+                ? <Sun className="w-4 h-4" aria-hidden="true" />
+                : <Moon className="w-4 h-4" aria-hidden="true" />
+              }
+            </button>
+          )}
+
           <Link
             href="/login"
             className="text-[13px] font-medium text-[#a8a8b3] hover:text-white focus-ring rounded-lg px-3 py-1.5 transition-colors"
@@ -78,24 +110,36 @@ export default function Navbar() {
         </div>
 
         {/* Mobile menu toggle */}
-        <button
-          className="md:hidden text-white focus-ring rounded-lg p-1"
-          onClick={() => setOpen(!open)}
-          aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
-          aria-expanded={open}
-          aria-controls={mobileMenuId}
-        >
-          {open
-            ? <X className="w-5 h-5" aria-hidden="true" />
-            : <Menu className="w-5 h-5" aria-hidden="true" />
-          }
-        </button>
+        <div className="md:hidden flex items-center gap-2">
+          {mounted && (
+            <button
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-[#a8a8b3] hover:text-white focus-ring transition-colors"
+              aria-label={isDark ? "Passer en mode clair" : "Passer en mode sombre"}
+              aria-pressed={isDark}
+            >
+              {isDark ? <Sun className="w-3.5 h-3.5" aria-hidden="true" /> : <Moon className="w-3.5 h-3.5" aria-hidden="true" />}
+            </button>
+          )}
+          <button
+            className="text-white focus-ring rounded-lg p-1"
+            onClick={() => setOpen(!open)}
+            aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-expanded={open}
+            aria-controls={mobileMenuId}
+          >
+            {open
+              ? <X className="w-5 h-5" aria-hidden="true" />
+              : <Menu className="w-5 h-5" aria-hidden="true" />
+            }
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
       <div
         id={mobileMenuId}
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-out ${open ? "max-h-72 opacity-100" : "max-h-0 opacity-0"}`}
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-out ${open ? "max-h-80 opacity-100" : "max-h-0 opacity-0"}`}
         aria-hidden={!open}
       >
         <div className="border-t border-white/8 bg-[#0a0a0a] px-6 py-4 space-y-3">
@@ -109,6 +153,13 @@ export default function Navbar() {
               {l.label}
             </a>
           ))}
+          <Link
+            href="/contact-card"
+            className="block text-[13px] text-[#a8a8b3] hover:text-white focus-ring rounded transition-colors"
+            onClick={() => setOpen(false)}
+          >
+            Carte de contact
+          </Link>
           <Link
             href="/login"
             className="block text-[13px] text-[#a8a8b3] hover:text-white focus-ring rounded transition-colors"
