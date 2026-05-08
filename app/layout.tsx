@@ -65,6 +65,10 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
+  alternates: {
+    canonical: BASE_URL,
+    languages: { "fr-FR": BASE_URL, "x-default": BASE_URL },
+  },
   openGraph: {
     type: "website",
     locale: "fr_FR",
@@ -74,6 +78,13 @@ export const metadata: Metadata = {
     description:
       "Transformez chaque table en source de revenus. Menu IA, commandes, paiements et CRM dans une seule plateforme.",
     images: [
+      {
+        url: "/og-hero-tableo.webp",
+        width: 1200,
+        height: 630,
+        alt: "Tableo — Interface restaurant : menu QR, commandes à table, paiements et analytics en temps réel",
+        type: "image/webp",
+      },
       {
         url: "/og-image.png",
         width: 1200,
@@ -90,7 +101,7 @@ export const metadata: Metadata = {
     title: "Tableo — Revenue Operating System pour restaurants",
     description:
       "Menu IA, commandes à table, paiements, CRM et analytics — tout pour maximiser les revenus de votre restaurant.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Tableo app" }],
+    images: [{ url: "/og-hero-tableo.webp", width: 1200, height: 630, alt: "Aperçu Tableo : interface restaurant SaaS" }],
   },
   manifest: "/site.webmanifest",
   icons: {
@@ -119,38 +130,117 @@ export const viewport: Viewport = {
   viewportFit: "cover",  // safe-area iOS
 };
 
-/* ── Amélioration 3 : JSON-LD SoftwareApplication (SEO rich results) ── */
+/* ── JSON-LD enrichi : @graph multi-types pour rich results SERP ── */
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  name: "Tableo",
-  applicationCategory: "BusinessApplication",
-  operatingSystem: "Web, iOS, Android",
-  url: BASE_URL,
-  description:
-    "Revenue Operating System pour restaurants — menu QR code, commandes, paiements et CRM.",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "EUR",
-    description: "Essai gratuit disponible",
-  },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    reviewCount: "12000",
-    bestRating: "5",
-  },
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${BASE_URL}/#organization`,
+      name: "Tableo",
+      url: BASE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: `${BASE_URL}/logo.webp`,
+        width: 512,
+        height: 512,
+      },
+      sameAs: [
+        "https://twitter.com/TableoApp",
+      ],
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        availableLanguage: ["French", "English"],
+        areaServed: "FR",
+      },
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${BASE_URL}/#website`,
+      url: BASE_URL,
+      name: "Tableo",
+      inLanguage: "fr-FR",
+      publisher: { "@id": `${BASE_URL}/#organization` },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${BASE_URL}/menu/{search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": `${BASE_URL}/#software`,
+      name: "Tableo",
+      applicationCategory: "BusinessApplication",
+      applicationSubCategory: "Restaurant Management Software",
+      operatingSystem: "Web, iOS, Android",
+      url: BASE_URL,
+      description:
+        "Revenue Operating System pour restaurants — menu QR code, commandes à table, paiements intégrés, CRM et analytics IA.",
+      featureList: [
+        "Menu digital QR code",
+        "Commandes à table",
+        "Paiement intégré sans contact",
+        "CRM client automatique",
+        "Analytics revenus en temps réel",
+        "Upsell IA et recommandations",
+        "Multi-restaurant",
+        "Export comptable",
+      ],
+      image: `${BASE_URL}/hero-tableo-1600.webp`,
+      screenshot: `${BASE_URL}/hero-tableo-2400.webp`,
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "EUR",
+        description: "Essai gratuit · sans carte bancaire",
+        availability: "https://schema.org/InStock",
+      },
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: "4.9",
+        reviewCount: "12000",
+        bestRating: "5",
+        worstRating: "1",
+      },
+      publisher: { "@id": `${BASE_URL}/#organization` },
+      inLanguage: "fr-FR",
+    },
+    {
+      "@type": "ImageObject",
+      "@id": `${BASE_URL}/#hero-image`,
+      url: `${BASE_URL}/hero-tableo-1600.webp`,
+      contentUrl: `${BASE_URL}/hero-tableo-2400.webp`,
+      width: 2730,
+      height: 1536,
+      caption:
+        "Interface Tabléo — tableau de bord restaurant avec menu QR, commandes, analytics et CRM",
+      encodingFormat: "image/webp",
+      creditText: "Tableo",
+      copyrightNotice: "© Tableo",
+      license: BASE_URL,
+    },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" suppressHydrationWarning className={`${inter.variable} ${manrope.variable} ${ptSerif.variable} antialiased`}>
       <head>
-        {/* Amélioration 4 : DNS prefetch pour perf externe */}
+        {/* DNS prefetch & preconnect — perf externe */}
         <link rel="dns-prefetch" href="//fonts.gstatic.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Amélioration 5 : JSON-LD schema.org */}
+        {/* Preload du hero LCP (responsive : navigateur choisit la bonne taille) */}
+        <link
+          rel="preload"
+          as="image"
+          href="/hero-tableo-1600.webp"
+          imageSrcSet="/hero-tableo-640.webp 640w, /hero-tableo-1024.webp 1024w, /hero-tableo-1600.webp 1600w, /hero-tableo-2400.webp 2400w"
+          imageSizes="(max-width: 1280px) 100vw, 1024px"
+          fetchPriority="high"
+        />
+        {/* JSON-LD enrichi (Organization + WebSite + SoftwareApplication + ImageObject) */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -3,7 +3,6 @@ import { ArrowRight, Play } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCountUp } from "@/lib/hooks/useCountUp";
-import { HeroImage } from "@/components/ui/LazyImage";
 
 function AnimatedStat({ prefix = "", suffix = "", target, decimals = 0, label }: {
   prefix?: string; suffix?: string; target: number; decimals?: number; label: string;
@@ -112,16 +111,35 @@ const HeroSection = () => (
         </div>
       </div>
 
-      {/* Hero image */}
-      <div className="animate-fade-up-d7 mt-16 relative mx-auto max-w-5xl">
-        <HeroImage
-          src="/hero-tableo.png"
-          alt="Interface Tabléo — menu digital QR code sur smartphone avec analytics restaurant en arrière-plan"
-          width={2730}
-          height={1536}
-          priority
-        />
-      </div>
+      {/* Hero image — webp multi-résolutions + alt SEO long-tail (FR) */}
+      <figure className="animate-fade-up-d7 mt-16 relative mx-auto max-w-5xl">
+        <div className="relative overflow-hidden rounded-[16px] border border-[#e5e7eb] shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+          <picture>
+            <source
+              type="image/avif"
+              srcSet="/hero-tableo-1600.avif"
+              sizes="(max-width: 1280px) 100vw, 1024px"
+            />
+            <source
+              type="image/webp"
+              srcSet="/hero-tableo-640.webp 640w, /hero-tableo-1024.webp 1024w, /hero-tableo-1600.webp 1600w, /hero-tableo-2400.webp 2400w"
+              sizes="(max-width: 1280px) 100vw, 1024px"
+            />
+            <img
+              src="/hero-tableo-1600.webp"
+              alt="Interface Tabléo : tableau de bord restaurant avec menu QR code, commandes en temps réel, analytics de revenus et CRM client — application SaaS française pour digitaliser un restaurant en moins de 5 minutes"
+              width={2730}
+              height={1536}
+              fetchPriority="high"
+              decoding="async"
+              className="w-full h-auto block"
+            />
+          </picture>
+        </div>
+        <figcaption className="sr-only">
+          Aperçu de l&apos;application Tabléo : QR menu, commandes à table, paiements et analytics revenus pour restaurants.
+        </figcaption>
+      </figure>
     </div>
   </section>
 );
