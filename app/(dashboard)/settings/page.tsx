@@ -21,6 +21,8 @@ const TIMEZONES = ["Europe/Paris", "Europe/London", "America/New_York", "America
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("restaurant");
   const [saving, setSaving] = useState(false);
+  /* #33 — isDirty : détecte les modifications non sauvegardées */
+  const [isDirty, setIsDirty] = useState(false);
   const { data: restaurant } = useRestaurant();
 
   const [restaurantForm, setRestaurantForm] = useState({
@@ -80,6 +82,7 @@ export default function SettingsPage() {
 
   const save = async () => {
     setSaving(true);
+    setIsDirty(false);
     try {
       if (restaurant?.id) {
         const payload: Record<string, any> = {
@@ -118,17 +121,21 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-12">
+      {/* #33 — dirty-dot sur le titre si modifications non sauvegardées */}
       <PageHeader
-        title="Paramètres"
+        title={
+          <span className={isDirty ? "dirty-dot" : ""}>Paramètres</span>
+        }
         subtitle="Configurez votre restaurant"
         actions={
           <button
             onClick={save}
             disabled={saving}
-            className="flex items-center gap-2 rounded-lg bg-gradient-warm px-4 py-2 text-xs font-semibold text-primary-foreground shadow-warm hover:scale-[1.02] transition-all disabled:opacity-50"
+            aria-label={isDirty ? "Sauvegarder les modifications" : "Paramètres déjà à jour"}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold shadow-warm hover:scale-[1.02] transition-all disabled:opacity-50 ${isDirty ? "bg-gradient-warm text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}
           >
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <Save className="w-3.5 h-3.5" aria-hidden="true" />}
-            {saving ? "Sauvegarde..." : "Sauvegarder"}
+            {saving ? "Sauvegarde..." : isDirty ? "Sauvegarder *" : "Sauvegarder"}
           </button>
         }
       />
@@ -218,7 +225,7 @@ export default function SettingsPage() {
                         id={`setting-${field.key}`}
                         type={field.type}
                         value={(restaurantForm as Record<string, string>)[field.key]}
-                        onChange={(e) => setRestaurantForm((p) => ({ ...p, [field.key]: e.target.value }))}
+                        onChange={(e) => { setRestaurantForm((p) => ({ ...p, [field.key]: e.target.value })); setIsDirty(true); }}
                         className="w-full rounded-xl bg-secondary border border-border px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors focus-ring"
                       />
                     </div>

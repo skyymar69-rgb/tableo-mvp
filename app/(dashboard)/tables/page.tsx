@@ -261,23 +261,46 @@ export default function TablesPage() {
             ))}
           </div>
 
-          {/* Grid */}
+          {/* Grid — #37 : séparateurs par zone/floor */}
           {isLoading && restaurantId ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
               {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
             </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-              {filtered.map((table) => (
-                <TableCard
-                  key={table.id}
-                  table={table}
-                  selected={selected === table.id}
-                  onClick={() => setSelected(selected === table.id ? null : table.id)}
-                />
-              ))}
-            </div>
-          )}
+          ) : (() => {
+            /* Group tables by floor label; tables without floor go into "Salle principale" */
+            const groups = filtered.reduce<Record<string, TableData[]>>((acc, t) => {
+              const zone = t.floor || "Salle principale";
+              if (!acc[zone]) acc[zone] = [];
+              acc[zone].push(t);
+              return acc;
+            }, {});
+            const hasMultipleZones = Object.keys(groups).length > 1;
+            return (
+              <div className="space-y-4">
+                {Object.entries(groups).map(([zone, zoneTables]) => (
+                  <div key={zone}>
+                    {hasMultipleZones && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{zone}</span>
+                        <div className="flex-1 h-px bg-border" />
+                        <span className="text-[10px] text-muted-foreground/60">{zoneTables.length} table{zoneTables.length > 1 ? "s" : ""}</span>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+                      {zoneTables.map((table) => (
+                        <TableCard
+                          key={table.id}
+                          table={table}
+                          selected={selected === table.id}
+                          onClick={() => setSelected(selected === table.id ? null : table.id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Right panel */}

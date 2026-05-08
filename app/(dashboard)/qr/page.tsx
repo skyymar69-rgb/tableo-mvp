@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { QrCode, Download, Palette, RefreshCw, Loader2, Check, Share2, Plus, Globe, Printer } from "lucide-react";
+import { QrCode, Download, Palette, RefreshCw, Loader2, Check, Share2, Plus, Globe, Printer, Copy, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
 import { DigitalCard } from "@/components/dashboard/DigitalCard";
@@ -18,6 +18,8 @@ const COLOR_PRESETS = [
 export default function QRPage() {
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
+  /* #36 — Indique si les paramètres ont changé après la dernière génération */
+  const [previewStale, setPreviewStale] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState(0);
   const [customFg, setCustomFg] = useState("#000000");
   const [customBg, setCustomBg] = useState("#FFFFFF");
@@ -33,6 +35,9 @@ export default function QRPage() {
     : null;
 
   const generateQR = async () => {
+    /* #34 — Validation avant génération */
+    if (!qrName.trim()) { toast.error("Veuillez saisir un nom pour le QR Code"); return; }
+    setPreviewStale(false);
     setGenerating(true);
     try {
       const res = await fetch("/api/qr/generate", {
@@ -89,7 +94,7 @@ export default function QRPage() {
                   <input
                     id="qr-name"
                     value={qrName}
-                    onChange={(e) => setQrName(e.target.value)}
+                    onChange={(e) => { setQrName(e.target.value); if (generated) setPreviewStale(true); }}
                     className="w-full rounded-xl bg-secondary border border-border px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 focus-ring transition-colors"
                   />
                 </div>
@@ -116,7 +121,7 @@ export default function QRPage() {
                 {COLOR_PRESETS.map((p, i) => (
                   <button
                     key={p.label}
-                    onClick={() => setSelectedPreset(i)}
+                    onClick={() => { setSelectedPreset(i); if (generated) setPreviewStale(true); }}
                     aria-pressed={selectedPreset === i}
                     aria-label={`Couleur ${p.label}${selectedPreset === i ? " (sélectionné)" : ""}`}
                     className={`relative rounded-xl p-3 border transition-all focus-ring ${selectedPreset === i ? "border-primary shadow-warm" : "border-border hover:border-primary/30"}`}
@@ -137,10 +142,10 @@ export default function QRPage() {
             <button
               onClick={generateQR}
               disabled={generating}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-warm py-3.5 text-sm font-semibold text-primary-foreground shadow-warm hover:scale-[1.01] transition-all disabled:opacity-50"
+              className={`w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold shadow-warm hover:scale-[1.01] transition-all disabled:opacity-50 ${previewStale ? "bg-yellow-500 text-white" : "bg-gradient-warm text-primary-foreground"}`}
             >
-              {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4" />}
-              {generating ? "Génération..." : "Générer le QR Code"}
+              {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : previewStale ? <RefreshCw className="w-4 h-4" /> : <QrCode className="w-4 h-4" />}
+              {generating ? "Génération..." : previewStale ? "Régénérer (paramètres modifiés)" : "Générer le QR Code"}
             </button>
           </div>
 
@@ -164,7 +169,19 @@ export default function QRPage() {
                   <div className="text-center">
                     <p className="text-sm font-medium text-foreground">{qrName}</p>
                     {tableNumber && <p className="text-xs text-muted-foreground">Table {tableNumber}</p>}
-                    <p className="text-xs text-primary mt-1">tableo.app/menu/demo</p>
+                    {/* #35 — Copier l'URL du menu */}
+                    <button
+                      onClick={() => {
+                        const url = menuUrl ?? "https://tableo.app/menu/demo";
+                        navigator.clipboard.writeText(url).then(() => toast.success("URL copiée !")).catch(() => toast.error("Impossible de copier"));
+                      }}
+                      className="inline-flex items-center gap-1.5 mt-1.5 text-xs text-primary hover:underline focus-ring rounded group"
+                      aria-label="Copier l'URL du menu"
+                    >
+                      <Globe className="w-3 h-3" aria-hidden="true" />
+                      <span className="truncate max-w-[160px]">{menuUrl ?? "tableo.app/menu/demo"}</span>
+                      <Copy className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" aria-hidden="true" />
+                    </button>
                   </div>
                 )}
               </div>

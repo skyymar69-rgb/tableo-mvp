@@ -22,6 +22,7 @@ const PredictionLineChart = dynamic(
 );
 import { formatCurrency } from "@/lib/utils";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 
 const DEMO_FUNNEL = [
   { label: "QR Scannés", value: 523, prev: 450, icon: QrCode, color: "from-orange-500 to-pink-500" },
@@ -86,40 +87,41 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-12">
-      <div className="sticky top-0 z-10 glass border-b border-border/40 px-6 h-16 flex items-center justify-between">
-        <div>
-          <h1 className="text-base font-bold text-foreground">Analytics</h1>
-          <p className="text-xs text-muted-foreground">Vue complète de vos performances</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
-            {(["week", "month", "year"] as const).map((r) => (
-              <button key={r} onClick={() => setRange(r)} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${range === r ? "bg-gradient-warm text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                {r === "week" ? "7j" : r === "month" ? "30j" : "1an"}
-              </button>
-            ))}
+      {/* #32 — PageHeader unifié remplace le sticky header inline */}
+      <PageHeader
+        title="Analytics"
+        subtitle="Vue complète de vos performances"
+        actions={
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
+              {(["week", "month", "year"] as const).map((r) => (
+                <button key={r} onClick={() => setRange(r)} aria-pressed={range === r} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all focus-ring ${range === r ? "bg-gradient-warm text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                  {r === "week" ? "7j" : r === "month" ? "30j" : "1an"}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={async () => {
+                if (!restaurantId) { toast.error("Restaurant non chargé"); return; }
+                try {
+                  const res = await fetch(`/api/export?type=analytics&restaurantId=${restaurantId}&range=${range}`);
+                  if (!res.ok) throw new Error();
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url; a.download = `analytics-${range}-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success("Export téléchargé !");
+                } catch { toast.error("Erreur lors de l'export"); }
+              }}
+              className="flex items-center gap-2 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/80 transition-colors focus-ring"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Exporter CSV
+            </button>
           </div>
-          <button
-            onClick={async () => {
-              if (!restaurantId) { toast.error("Restaurant non chargé"); return; }
-              try {
-                const res = await fetch(`/api/export?type=analytics&restaurantId=${restaurantId}&range=${range}`);
-                if (!res.ok) throw new Error();
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url; a.download = `analytics-${range}-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
-                URL.revokeObjectURL(url);
-                toast.success("Export téléchargé !");
-              } catch { toast.error("Erreur lors de l'export"); }
-            }}
-            className="flex items-center gap-2 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/80 transition-colors"
-          >
-            <Download className="w-3.5 h-3.5" />
-            Exporter CSV
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="p-6 space-y-6">
         {isLoading && (
@@ -128,24 +130,34 @@ export default function AnalyticsPage() {
           </div>
         )}
 
+        {/* #31 — Skeleton KPI pendant le chargement */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: "CA cette période", value: formatCurrency(kpis?.revenueToday ?? totalRevenue), change: "+18.4%", up: true },
-            { label: "Commandes totales", value: (kpis?.ordersToday ?? totalOrders).toString(), change: "+12.7%", up: true },
-            { label: "Taux de conversion", value: `${conversionRate}%`, change: "+2.1pts", up: true },
-            { label: "Panier moyen", value: formatCurrency(totalOrders > 0 ? totalRevenue / totalOrders : 0), change: "-1.2%", up: false },
-          ].map((k) => (
-            <div key={k.label} className="rounded-2xl border border-border bg-gradient-card p-5">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-muted-foreground">{k.label}</p>
-                <span className={`text-xs font-medium flex items-center gap-0.5 ${k.up ? "text-emerald-400" : "text-red-400"}`}>
-                  {k.up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {k.change}
-                </span>
+          {isLoading ? (
+            [...Array(4)].map((_, i) => (
+              <div key={i} className="rounded-2xl border border-border bg-gradient-card p-5 animate-pulse">
+                <div className="h-3 w-28 bg-secondary rounded mb-4" />
+                <div className="h-8 w-20 bg-secondary rounded" />
               </div>
-              <p className="text-2xl font-bold text-foreground">{k.value}</p>
-            </div>
-          ))}
+            ))
+          ) : (
+            [
+              { label: "CA cette période", value: formatCurrency(kpis?.revenueToday ?? totalRevenue), change: "+18.4%", up: true },
+              { label: "Commandes totales", value: (kpis?.ordersToday ?? totalOrders).toString(), change: "+12.7%", up: true },
+              { label: "Taux de conversion", value: `${conversionRate}%`, change: "+2.1pts", up: true },
+              { label: "Panier moyen", value: formatCurrency(totalOrders > 0 ? totalRevenue / totalOrders : 0), change: "-1.2%", up: false },
+            ].map((k) => (
+              <div key={k.label} className="rounded-2xl border border-border bg-gradient-card p-5 card-interactive transition-all">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-muted-foreground">{k.label}</p>
+                  <span className={`text-xs font-medium flex items-center gap-0.5 ${k.up ? "text-emerald-400" : "text-red-400"}`}>
+                    {k.up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                    {k.change}
+                  </span>
+                </div>
+                <p className="text-2xl font-bold text-foreground">{k.value}</p>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="grid lg:grid-cols-5 gap-6">

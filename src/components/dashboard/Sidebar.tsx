@@ -9,7 +9,7 @@ import {
   LayoutDashboard, BarChart3, UtensilsCrossed, QrCode, TableIcon,
   Users, ShoppingBag, Settings, ChevronLeft, ChevronRight,
   Sun, Moon, LogOut, Building2, ChevronDown, Plus, Check, Users2, Search,
-  Shield, Crown, Zap, ArrowUpRight,
+  Shield, Crown, Zap, ArrowUpRight, X,
 } from "lucide-react";
 import { CommandPalette } from "./CommandPalette";
 import { useTheme } from "next-themes";
@@ -49,6 +49,11 @@ export function Sidebar() {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sidebar-collapsed") === "true";
     }
+    return false;
+  });
+  /* #24 — CTA upgrade dismissible */
+  const [ctaDismissed, setCtaDismissed] = useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("tableo-upgrade-cta-dismissed") === "true";
     return false;
   });
   const [showSwitcher, setShowSwitcher] = useState(false);
@@ -257,12 +262,14 @@ export function Sidebar() {
                     {(item.badge as number) > 99 ? "99+" : item.badge}
                   </span>
                 )}
+                {/* #25 — animate-ping dot pour nouvelles commandes (mode collapsed) */}
                 {item.badge && collapsed && (
-                  <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-primary border-2 border-sidebar" />
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-primary border-2 border-sidebar animate-ping" />
                 )}
               </Link>
+              {/* #26 — Délai d'apparition tooltip : 150ms → 200ms pour éviter les flickers */}
               {collapsed && (
-                <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-150">
+                <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-150 delay-75">
                   <div className="tooltip-base">
                     {item.label}
                     {item.badge ? ` (${item.badge})` : ""}
@@ -306,9 +313,16 @@ export function Sidebar() {
         )}
       </nav>
 
-      {/* Upgrade CTA (FREE tier only) */}
-      {!collapsed && tier === "FREE" && (
-        <div className="mx-3 mb-2 rounded-xl bg-gradient-warm-subtle border border-primary/20 p-3">
+      {/* #24 — Upgrade CTA (FREE tier only) — dismissible via localStorage */}
+      {!collapsed && tier === "FREE" && !ctaDismissed && (
+        <div className="mx-3 mb-2 rounded-xl bg-gradient-warm-subtle border border-primary/20 p-3 relative">
+          <button
+            onClick={() => { setCtaDismissed(true); localStorage.setItem("tableo-upgrade-cta-dismissed", "true"); }}
+            aria-label="Fermer le bandeau d'upgrade"
+            className="absolute top-2 right-2 w-5 h-5 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus-ring"
+          >
+            <X className="w-3 h-3" />
+          </button>
           <div className="flex items-center gap-2 mb-1.5">
             <Crown className="w-3.5 h-3.5 text-primary" />
             <span className="text-xs font-semibold text-foreground">Passer à Growth</span>

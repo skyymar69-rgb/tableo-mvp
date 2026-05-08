@@ -49,6 +49,33 @@ export function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+/* #9 — formatElapsed : durée écoulée depuis une date (minutes → "2h30min") */
+export function formatElapsed(date: Date | string): string {
+  const ms = Date.now() - new Date(date).getTime();
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 1) return "< 1 min";
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h${m}min` : `${h}h`;
+}
+
+/* #10 — isMac : détection plateforme pour les hints clavier */
+export function isMac(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Mac|iPhone|iPad|iPod/.test(navigator.platform ?? navigator.userAgent);
+}
+
+/* #11 — formatElapsedMs : durée en ms → label compact */
+export function formatElapsedMs(ms: number): string {
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 1) return "< 1 min";
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h${m}` : `${h}h`;
+}
+
 export const DISH_LABEL_EMOJI: Record<string, string> = {
   BESTSELLER: "🔥",
   NEW: "⭐",

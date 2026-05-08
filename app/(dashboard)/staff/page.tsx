@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Users, Plus, Mail, Shield, Clock, Search, Trash2, Crown, ChefHat, UserCog, X } from "lucide-react";
+import { Users, Plus, Mail, Shield, Clock, Search, Trash2, Crown, ChefHat, UserCog, X, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { formatRelative } from "@/lib/utils";
 
 const ROLE_CONFIG = {
   OWNER:   { label: "Propriétaire", icon: Crown,   color: "text-yellow-400 bg-yellow-400/10" },
@@ -126,6 +127,10 @@ export default function StaffPage() {
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground truncate">{member.email}</p>
+                      {/* #29 — Date relative "Membre depuis" */}
+                      <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                        {member.accepted ? `Depuis ${formatRelative(member.createdAt)}` : `Invitation envoyée ${formatRelative(member.createdAt)}`}
+                      </p>
                     </div>
                   </div>
 
@@ -134,6 +139,17 @@ export default function StaffPage() {
                       <roleCfg.icon className="w-3 h-3" aria-hidden="true" />
                       {roleCfg.label}
                     </span>
+                    {/* #30 — Bouton renvoi invitation avec animation pulse */}
+                    {!member.accepted && (
+                      <button
+                        onClick={() => toast.success(`Invitation renvoyée à ${member.email}`)}
+                        aria-label={`Renvoyer l'invitation à ${member.email}`}
+                        title="Renvoyer l'invitation"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-yellow-400 hover:bg-yellow-400/10 transition-colors animate-badge-pulse"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                      </button>
+                    )}
                     {member.role !== "OWNER" && (
                       <button
                         onClick={() => toast.success("Membre retiré")}
