@@ -13,20 +13,20 @@ export default function ContactCardPage() {
   return (
     <>
       <Navbar />
-      <main id="main-content" tabIndex={-1} className="focus:outline-none min-h-screen bg-[#f5f7fa] dark:bg-[#0a0a0a] pt-[60px]">
-        <div className="border-b border-[#e8eaed] dark:border-white/8 bg-white dark:bg-[#000] py-10">
+      <main id="main-content" tabIndex={-1} className="focus:outline-none min-h-screen bg-[#f5f5f5] pt-16">
+        <div className="border-b border-[#e5e7eb] bg-white py-10">
           <div className="container mx-auto px-6 max-w-2xl text-center">
             <nav aria-label="Fil d'Ariane" className="mb-4 flex justify-center">
               <ol className="flex items-center gap-2 text-[11px] text-[#6b7280]" role="list">
-                <li><a href="/" className="hover:text-[#0a0a0a] dark:hover:text-white focus-ring rounded transition-colors">Accueil</a></li>
+                <li><a href="/" className="hover:text-[#111111] focus-ring rounded transition-colors">Accueil</a></li>
                 <li aria-hidden="true">›</li>
-                <li aria-current="page" className="text-[#0a0a0a] dark:text-white font-medium">Carte de contact</li>
+                <li aria-current="page" className="text-[#111111] font-medium">Carte de contact</li>
               </ol>
             </nav>
-            <h1 className="text-[clamp(1.5rem,3vw,2.2rem)] font-light tracking-tight text-[#0a0a0a] dark:text-white">
+            <h1 className="text-[clamp(1.5rem,3vw,2.2rem)] font-display font-semibold tracking-[-0.03em] text-[#111111]">
               Carte de contact numérique
             </h1>
-            <p className="mt-2 text-[14px] text-[#6b7280] dark:text-[#a8a8b3]">
+            <p className="mt-2 text-[14px] text-[#374151]">
               Scannez les QR codes ou téléchargez nos coordonnées
             </p>
           </div>

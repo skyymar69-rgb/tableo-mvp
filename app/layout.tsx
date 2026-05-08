@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Outfit, PT_Serif } from "next/font/google";
+import { Inter, Manrope, PT_Serif } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -15,9 +15,10 @@ const inter = Inter({
   preload: true,
 });
 
-const outfit = Outfit({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-outfit",
+  weight: ["600", "700"],
+  variable: "--font-display",
   display: "swap",
   preload: true,
 });
@@ -109,8 +110,8 @@ export const metadata: Metadata = {
 /* ── Amélioration 2 : viewport correct pour PWA / safe-areas ── */
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)",  color: "#080d20" },
-    { media: "(prefers-color-scheme: light)", color: "#fcf8fb" },
+    { media: "(prefers-color-scheme: dark)",  color: "#101010" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -144,7 +145,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" suppressHydrationWarning className={`${inter.variable} ${outfit.variable} ${ptSerif.variable}`}>
+    <html lang="fr" suppressHydrationWarning className={`${inter.variable} ${manrope.variable} ${ptSerif.variable} antialiased`}>
       <head>
         {/* Amélioration 4 : DNS prefetch pour perf externe */}
         <link rel="dns-prefetch" href="//fonts.gstatic.com" />

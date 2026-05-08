@@ -3,22 +3,17 @@
 import { useState, useEffect, useId } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Sun, Moon, QrCode } from "lucide-react";
-import { useTheme } from "next-themes";
+import { Menu, X, QrCode } from "lucide-react";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const isLanding = pathname === "/";
   const mobileMenuId = useId();
-  const { theme, setTheme } = useTheme();
-
-  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -35,19 +30,17 @@ export default function Navbar() {
     { label: "Tarifs", href: "#pricing" },
   ];
 
-  const isDark = theme === "dark";
-
   return (
     <nav
       aria-label="Navigation principale"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#000] dark:bg-[#000] ${
-        scrolled ? "border-b border-white/8" : "border-b border-transparent"
+      className={`fixed top-0 left-0 right-0 z-50 bg-white transition-shadow duration-200 ${
+        scrolled ? "shadow-[0_1px_0_#e5e7eb]" : ""
       }`}
     >
-      <div className="container mx-auto flex items-center justify-between h-[60px] px-6">
+      <div className="container mx-auto flex items-center justify-between h-16 px-6 max-w-[1200px]">
         {/* Logo */}
         <Link href="/" aria-label="Tabléo — Accueil" className="flex items-center focus-ring rounded-lg group">
-          <span className="text-[22px] font-bold tracking-tight text-white group-hover:opacity-80 transition-opacity">
+          <span className="text-[22px] font-bold tracking-tight text-[#111111] font-display group-hover:opacity-70 transition-opacity">
             Tabléo
           </span>
         </Link>
@@ -59,7 +52,7 @@ export default function Navbar() {
               <li key={l.href}>
                 <a
                   href={l.href}
-                  className="text-[13px] font-medium text-[#a8a8b3] hover:text-white focus-ring rounded transition-colors duration-150"
+                  className="text-[14px] font-medium text-[#374151] hover:text-[#111111] focus-ring rounded transition-colors duration-150"
                 >
                   {l.label}
                 </a>
@@ -68,42 +61,26 @@ export default function Navbar() {
           </ul>
         )}
 
-        {/* Desktop CTA */}
-        <div className="hidden md:flex items-center gap-3">
-          {/* Carte de contact numérique */}
+        {/* Desktop right side */}
+        <div className="hidden md:flex items-center gap-2">
           <Link
             href="/contact-card"
-            className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#a8a8b3] hover:text-white hover:border-white/20 focus-ring transition-all"
+            className="w-9 h-9 rounded-full border border-[#e5e7eb] flex items-center justify-center text-[#6b7280] hover:text-[#111111] hover:border-[#111111]/20 focus-ring transition-all"
             aria-label="Carte de contact numérique et QR code"
             title="Carte de contact"
           >
             <QrCode className="w-4 h-4" aria-hidden="true" />
           </Link>
 
-          {/* Theme toggle */}
-          {mounted && (
-            <button
-              onClick={() => setTheme(isDark ? "light" : "dark")}
-              className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#a8a8b3] hover:text-white hover:border-white/20 focus-ring transition-all"
-              aria-label={isDark ? "Passer en mode clair" : "Passer en mode sombre"}
-              aria-pressed={isDark}
-            >
-              {isDark
-                ? <Sun className="w-4 h-4" aria-hidden="true" />
-                : <Moon className="w-4 h-4" aria-hidden="true" />
-              }
-            </button>
-          )}
-
           <Link
             href="/login"
-            className="text-[13px] font-medium text-[#a8a8b3] hover:text-white focus-ring rounded-lg px-3 py-1.5 transition-colors"
+            className="text-[14px] font-medium text-[#374151] hover:text-[#111111] focus-ring rounded-lg px-3 py-1.5 transition-colors"
           >
             Connexion
           </Link>
           <Link
             href="/onboarding"
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#0070d1] hover:bg-[#0082f0] px-5 py-2 text-[13px] font-semibold text-white transition-colors focus-ring"
+            className="inline-flex items-center gap-1.5 rounded-[8px] bg-[#111111] hover:bg-[#242424] px-5 py-2 text-[14px] font-semibold text-white transition-colors focus-ring"
           >
             Commencer gratuitement
           </Link>
@@ -111,18 +88,8 @@ export default function Navbar() {
 
         {/* Mobile menu toggle */}
         <div className="md:hidden flex items-center gap-2">
-          {mounted && (
-            <button
-              onClick={() => setTheme(isDark ? "light" : "dark")}
-              className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-[#a8a8b3] hover:text-white focus-ring transition-colors"
-              aria-label={isDark ? "Passer en mode clair" : "Passer en mode sombre"}
-              aria-pressed={isDark}
-            >
-              {isDark ? <Sun className="w-3.5 h-3.5" aria-hidden="true" /> : <Moon className="w-3.5 h-3.5" aria-hidden="true" />}
-            </button>
-          )}
           <button
-            className="text-white focus-ring rounded-lg p-1"
+            className="text-[#111111] focus-ring rounded-lg p-1"
             onClick={() => setOpen(!open)}
             aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
             aria-expanded={open}
@@ -142,12 +109,12 @@ export default function Navbar() {
         className={`md:hidden overflow-hidden transition-all duration-300 ease-out ${open ? "max-h-80 opacity-100" : "max-h-0 opacity-0"}`}
         aria-hidden={!open}
       >
-        <div className="border-t border-white/8 bg-[#0a0a0a] px-6 py-4 space-y-3">
+        <div className="border-t border-[#e5e7eb] bg-white px-6 py-4 space-y-1">
           {isLanding && links.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="block text-[13px] text-[#a8a8b3] hover:text-white focus-ring rounded transition-colors"
+              className="block text-[14px] text-[#374151] hover:text-[#111111] focus-ring rounded py-2 transition-colors"
               onClick={() => setOpen(false)}
             >
               {l.label}
@@ -155,25 +122,27 @@ export default function Navbar() {
           ))}
           <Link
             href="/contact-card"
-            className="block text-[13px] text-[#a8a8b3] hover:text-white focus-ring rounded transition-colors"
+            className="block text-[14px] text-[#374151] hover:text-[#111111] focus-ring rounded py-2 transition-colors"
             onClick={() => setOpen(false)}
           >
             Carte de contact
           </Link>
           <Link
             href="/login"
-            className="block text-[13px] text-[#a8a8b3] hover:text-white focus-ring rounded transition-colors"
+            className="block text-[14px] text-[#374151] hover:text-[#111111] focus-ring rounded py-2 transition-colors"
             onClick={() => setOpen(false)}
           >
             Connexion
           </Link>
-          <Link
-            href="/onboarding"
-            className="block rounded-full bg-[#0070d1] hover:bg-[#0082f0] px-5 py-2.5 text-[13px] font-semibold text-white text-center focus-ring transition-colors"
-            onClick={() => setOpen(false)}
-          >
-            Commencer gratuitement
-          </Link>
+          <div className="pt-2">
+            <Link
+              href="/onboarding"
+              className="block rounded-[8px] bg-[#111111] hover:bg-[#242424] px-5 py-2.5 text-[14px] font-semibold text-white text-center focus-ring transition-colors"
+              onClick={() => setOpen(false)}
+            >
+              Commencer gratuitement
+            </Link>
+          </div>
         </div>
       </div>
     </nav>

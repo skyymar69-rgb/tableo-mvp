@@ -33,29 +33,22 @@ const engines = [
 ];
 
 const RevenueSection = () => (
-  <section id="revenue" className="py-24 md:py-32 bg-[#000] relative overflow-hidden">
-    {/* Structural blue glow from left */}
-    <div
-      className="absolute inset-y-0 left-0 w-[600px] pointer-events-none"
-      style={{ background: "radial-gradient(ellipse 70% 60% at 0% 50%, rgba(0,112,209,0.08), transparent)" }}
-      aria-hidden="true"
-    />
-
-    <div className="container mx-auto px-6 relative">
+  <section id="revenue" className="py-24 md:py-32 bg-white">
+    <div className="container mx-auto px-6 max-w-[1200px]">
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <p className="text-[11px] font-semibold text-[#0070d1] mb-3 tracking-widest uppercase">Revenue Engine</p>
-        <h2 className="text-[clamp(1.8rem,4vw,3rem)] font-light tracking-tight text-white">
+        <p className="text-[11px] font-semibold text-[#6b7280] mb-3 tracking-widest uppercase">Revenue Engine</p>
+        <h2 className="text-[clamp(1.8rem,4vw,3rem)] font-display font-semibold tracking-[-0.03em] text-[#111111]">
           Pas juste un menu.{" "}
-          <span className="text-[#0070d1] italic">Un moteur de revenus.</span>
+          <span className="text-[#6b7280]">Un moteur de revenus.</span>
         </h2>
-        <p className="mt-4 text-[15px] text-[#a8a8b3]">
+        <p className="mt-4 text-[15px] text-[#374151]">
           Chaque interaction client est une opportunité de revenus. Tableo les capture toutes.
         </p>
       </div>
 
       {/* Analytics illustration */}
       <div className="max-w-4xl mx-auto mb-12">
-        <div className="rounded-[8px] border border-white/8 overflow-hidden">
+        <div className="rounded-[16px] border border-[#e5e7eb] overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
           <Image
             src="/illus-analytics.svg"
             alt="Dashboard analytique Tabléo : revenus, commandes et scans QR en temps réel"
@@ -70,19 +63,19 @@ const RevenueSection = () => (
         {engines.map((e) => (
           <div
             key={e.title}
-            className="group rounded-[8px] border border-white/8 bg-[#121314] p-8 hover:border-[#0070d1]/30 transition-colors duration-200"
+            className="group rounded-[12px] bg-[#f5f5f5] p-8 transition-shadow duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
           >
             <div className="flex items-start justify-between mb-5">
-              <div className="w-11 h-11 rounded-[8px] bg-[#0070d1]/10 flex items-center justify-center group-hover:bg-[#0070d1] transition-colors duration-200">
-                <e.icon className="w-5 h-5 text-[#0070d1] group-hover:text-white transition-colors duration-200" />
+              <div className="w-11 h-11 rounded-[8px] bg-white border border-[#e5e7eb] flex items-center justify-center group-hover:bg-[#111111] group-hover:border-[#111111] transition-colors duration-200">
+                <e.icon className="w-5 h-5 text-[#111111] group-hover:text-white transition-colors duration-200" />
               </div>
               <div className="text-right">
-                <div className="text-3xl font-light text-white">{e.metric}</div>
-                <div className="text-[11px] text-[#a8a8b3]">{e.metricLabel}</div>
+                <div className="text-3xl font-display font-semibold tracking-[-0.04em] text-[#111111]">{e.metric}</div>
+                <div className="text-[11px] text-[#6b7280]">{e.metricLabel}</div>
               </div>
             </div>
-            <h3 className="text-[15px] font-semibold text-white mb-2">{e.title}</h3>
-            <p className="text-[13px] text-[#a8a8b3] leading-relaxed">{e.desc}</p>
+            <h3 className="text-[15px] font-semibold text-[#111111] mb-2">{e.title}</h3>
+            <p className="text-[13px] text-[#374151] leading-relaxed">{e.desc}</p>
           </div>
         ))}
       </div>
