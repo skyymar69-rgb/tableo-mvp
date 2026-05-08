@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   TrendingUp, DollarSign, ShoppingCart, QrCode, BarChart3,
   ArrowUpRight, ArrowDownRight, Bell, Search, Calendar,
@@ -203,6 +204,7 @@ export function DashboardClient({
   restaurantId: string;
   dailyGoal?: number;
 }) {
+  const router = useRouter();
   const [period, setPeriod] = useState<"today" | "week" | "month">("today");
   const [kpis, setKpis] = useState(data?.kpis);
   const [sseConnected, setSseConnected] = useState(false);
@@ -210,6 +212,8 @@ export function DashboardClient({
   const [notifications, setNotifications] = useState<Array<{ id: string; message: string; time: string }>>([]);
   const [chartType, setChartType] = useState<"revenue" | "orders">("revenue");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [periodChartData, setPeriodChartData] = useState<DashboardData["chartData"] | null>(null);
+  const [periodLoading, setPeriodLoading] = useState(false);
 
   useEffect(() => {
     if (!restaurantId) return;
@@ -236,13 +240,33 @@ export function DashboardClient({
     return () => es.close();
   }, [restaurantId]);
 
-  /* #39 — Bouton refresh avec animation spinner */
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await new Promise((r) => setTimeout(r, 800));
+    router.refresh();
+    await new Promise((r) => setTimeout(r, 600));
     setIsRefreshing(false);
     toast.success("Données actualisées !");
-  }, []);
+  }, [router]);
+
+  /* Fetch chart data when period changes (week/month use analytics API) */
+  useEffect(() => {
+    if (period === "today" || !restaurantId) {
+      setPeriodChartData(null);
+      return;
+    }
+    let cancelled = false;
+    setPeriodLoading(true);
+    fetch(`/api/analytics?restaurantId=${restaurantId}&range=${period === "week" ? "week" : "month"}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (json.chart?.length) setPeriodChartData(json.chart);
+        else setPeriodChartData(null);
+      })
+      .catch(() => setPeriodChartData(null))
+      .finally(() => { if (!cancelled) setPeriodLoading(false); });
+    return () => { cancelled = true; };
+  }, [period, restaurantId]);
 
   if (!data) {
     return (
@@ -331,8 +355,8 @@ export function DashboardClient({
     },
   ], [kpis]);
 
-  /* #35 — Label du chart selon la période */
   const chartPeriodLabel = period === "today" ? "aujourd'hui" : period === "week" ? "cette semaine" : "ce mois";
+  const activeChartData = periodChartData ?? data?.chartData ?? [];
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -474,9 +498,11 @@ export function DashboardClient({
           <div className="lg:col-span-2 rounded-2xl border border-border bg-gradient-card p-6 card-contained">
             <div className="flex items-center justify-between mb-6">
               <div>
-                {/* #35 — Label chart selon période */}
-                <h3 className="text-base font-semibold text-foreground capitalize">
+                <h3 className="text-base font-semibold text-foreground capitalize flex items-center gap-2">
                   {chartType === "revenue" ? "Revenu" : "Commandes"} {chartPeriodLabel}
+                  {periodLoading && (
+                    <span className="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" aria-label="Chargement" />
+                  )}
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">vs. période précédente</p>
               </div>
@@ -490,7 +516,7 @@ export function DashboardClient({
             </div>
             <ResponsiveContainer width="100%" height={200}>
               {chartType === "revenue" ? (
-                <AreaChart data={data.chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                <AreaChart data={activeChartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%"   stopColor="hsl(244,97%,35%)" stopOpacity={0.28} />
@@ -505,7 +531,7 @@ export function DashboardClient({
                   <Area type="monotone" dataKey="revenue" name="Revenu" stroke="hsl(244,97%,35%)" strokeWidth={2} fill="url(#revenueGrad)" dot={false} activeDot={{ r: 4, fill: "hsl(302,30%,40%)", stroke: "hsl(244,97%,35%)", strokeWidth: 2 }} />
                 </AreaChart>
               ) : (
-                <BarChart data={data.chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                <BarChart data={activeChartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="ordersGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%"   stopColor="hsl(212,100%,13%)" />

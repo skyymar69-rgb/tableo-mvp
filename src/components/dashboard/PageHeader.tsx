@@ -6,7 +6,7 @@ import { ReactNode } from "react";
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   actions?: ReactNode;
   /** Largeur optionnelle de la barre (défaut: 100%) */
   className?: string;

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Settings, Store, Palette, Bell, CreditCard, Globe, Save, Loader2, Upload, Check, ChevronRight, Shield, Zap } from "lucide-react";
+import { Store, Palette, Bell, CreditCard, Save, Loader2, Upload, Check, Shield, Zap } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
@@ -117,20 +118,20 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-12">
-      <div className="sticky top-0 z-10 glass border-b border-border/40 px-6 h-16 flex items-center justify-between">
-        <div>
-          <h1 className="text-base font-bold text-foreground">Paramètres</h1>
-          <p className="text-xs text-muted-foreground">Configurez votre restaurant</p>
-        </div>
-        <button
-          onClick={save}
-          disabled={saving}
-          className="flex items-center gap-2 rounded-lg bg-gradient-warm px-4 py-2 text-xs font-semibold text-primary-foreground shadow-warm hover:scale-[1.02] transition-all disabled:opacity-50"
-        >
-          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-          {saving ? "Sauvegarde..." : "Sauvegarder"}
-        </button>
-      </div>
+      <PageHeader
+        title="Paramètres"
+        subtitle="Configurez votre restaurant"
+        actions={
+          <button
+            onClick={save}
+            disabled={saving}
+            className="flex items-center gap-2 rounded-lg bg-gradient-warm px-4 py-2 text-xs font-semibold text-primary-foreground shadow-warm hover:scale-[1.02] transition-all disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <Save className="w-3.5 h-3.5" aria-hidden="true" />}
+            {saving ? "Sauvegarde..." : "Sauvegarder"}
+          </button>
+        }
+      />
 
       <div className="p-6 grid lg:grid-cols-4 gap-6 max-w-6xl">
         {/* Tab nav */}
@@ -262,12 +263,12 @@ export default function SettingsPage() {
                       <div className="flex items-center gap-3">
                         <input
                           type="color"
-                          value={(appearanceForm as Record<string, string>)[field.key]}
+                          value={(appearanceForm as Record<string, unknown>)[field.key] as string}
                           onChange={(e) => setAppearanceForm((p) => ({ ...p, [field.key]: e.target.value }))}
                           className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-secondary"
                         />
                         <input
-                          value={(appearanceForm as Record<string, string>)[field.key]}
+                          value={(appearanceForm as Record<string, unknown>)[field.key] as string}
                           onChange={(e) => setAppearanceForm((p) => ({ ...p, [field.key]: e.target.value }))}
                           className="flex-1 rounded-xl bg-secondary border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 font-mono"
                         />
