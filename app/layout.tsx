@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Outfit, PT_Serif } from "next/font/google";
+import { Inter, Manrope, PT_Serif } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -15,9 +15,10 @@ const inter = Inter({
   preload: true,
 });
 
-const outfit = Outfit({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-outfit",
+  weight: ["600", "700"],
+  variable: "--font-display",
   display: "swap",
   preload: true,
 });
@@ -99,18 +100,18 @@ export const metadata: Metadata = {
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
-    other: [{ rel: "mask-icon", url: "/favicon-32x32.png", color: "#001e40" }],
+    other: [{ rel: "mask-icon", url: "/favicon-32x32.png", color: "#0070d1" }],
   },
   other: {
-    "msapplication-TileColor": "#001e40",
+    "msapplication-TileColor": "#0070d1",
   },
 };
 
 /* ── Amélioration 2 : viewport correct pour PWA / safe-areas ── */
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)",  color: "#080d20" },
-    { media: "(prefers-color-scheme: light)", color: "#fcf8fb" },
+    { media: "(prefers-color-scheme: dark)",  color: "#101010" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -144,7 +145,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" suppressHydrationWarning className={`${inter.variable} ${outfit.variable} ${ptSerif.variable}`}>
+    <html lang="fr" suppressHydrationWarning className={`${inter.variable} ${manrope.variable} ${ptSerif.variable} antialiased`}>
       <head>
         {/* Amélioration 4 : DNS prefetch pour perf externe */}
         <link rel="dns-prefetch" href="//fonts.gstatic.com" />

@@ -13,9 +13,8 @@ export default {
     extend: {
       fontFamily: {
         sans:      ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
-        heading:   ['var(--font-outfit)', 'Outfit', 'system-ui', 'sans-serif'],
+        display:   ['var(--font-display)', 'Manrope', 'Inter', 'system-ui', 'sans-serif'],
         serif:     ['var(--font-pt-serif)', 'PT Serif', 'Georgia', 'serif'],
-        // editorial supprimé — alias redondant de serif
       },
       colors: {
         border: "hsl(var(--border))",
@@ -51,20 +50,26 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        /* PlayStation Design System palette */
-        ps: {
-          primary:  "#0070d1",
-          hover:    "#0082f0",
-          commerce: "#d53b00",
-          dark:     "#000000",
-          elevated: "#121314",
-          surface:  "#1e2022",
-          light:    "#ffffff",
-          "light-2":"#f5f7fa",
-          "light-3":"#e8eaed",
-          text:     "#f0f0f0",
-          "text-2": "#a8a8b3",
-          gold:     "#f0c040",
+        /* Cal.com Design System palette */
+        cal: {
+          ink:          "#111111",
+          "ink-active": "#242424",
+          body:         "#374151",
+          muted:        "#6b7280",
+          "muted-soft": "#898989",
+          canvas:       "#ffffff",
+          "surface-soft":"#f8f9fa",
+          "surface-card":"#f5f5f5",
+          "surface-strong":"#e5e7eb",
+          "surface-dark":"#101010",
+          "surface-dark-elevated":"#1a1a1a",
+          hairline:     "#e5e7eb",
+          "hairline-soft":"#f3f4f6",
+          accent:       "#3b82f6",
+          "badge-orange":"#fb923c",
+          "badge-pink":  "#ec4899",
+          "badge-violet":"#8b5cf6",
+          "badge-emerald":"#34d399",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

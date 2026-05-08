@@ -2,9 +2,9 @@ import { Check, X, Minus, Crown } from "lucide-react";
 
 type Status = "yes" | "no" | "partial";
 const StatusIcon = ({ s }: { s: Status }) =>
-  s === "yes" ? <Check className="w-4 h-4 text-[#0070d1]" /> :
-  s === "no" ? <X className="w-4 h-4 text-white/15" /> :
-  <Minus className="w-4 h-4 text-white/30" />;
+  s === "yes" ? <Check className="w-4 h-4 text-[#111111]" /> :
+  s === "no" ? <X className="w-4 h-4 text-[#e5e7eb]" /> :
+  <Minus className="w-4 h-4 text-[#6b7280]" />;
 
 const rows: { feature: string; tableo: Status; nordqr: Status }[] = [
   { feature: "Menu QR dynamique", tableo: "yes", nordqr: "yes" },
@@ -22,39 +22,39 @@ const rows: { feature: string; tableo: Status; nordqr: Status }[] = [
 ];
 
 const ComparisonSection = () => (
-  <section className="py-24 md:py-32 bg-[#121314]">
-    <div className="container mx-auto px-6">
+  <section className="py-24 md:py-32 bg-[#f5f5f5]">
+    <div className="container mx-auto px-6 max-w-[1200px]">
       <div className="text-center max-w-2xl mx-auto mb-16">
-        <p className="text-[11px] font-semibold text-[#0070d1] mb-3 tracking-widest uppercase">Comparaison</p>
-        <h2 className="text-[clamp(1.8rem,4vw,3rem)] font-light tracking-tight text-white">
+        <p className="text-[11px] font-semibold text-[#6b7280] mb-3 tracking-widest uppercase">Comparaison</p>
+        <h2 className="text-[clamp(1.8rem,4vw,3rem)] font-display font-semibold tracking-[-0.03em] text-[#111111]">
           Tableo vs les alternatives
         </h2>
-        <p className="mt-4 text-[#a8a8b3] text-[15px]">Pas dans la même catégorie.</p>
+        <p className="mt-4 text-[#374151] text-[15px]">Pas dans la même catégorie.</p>
       </div>
 
-      <div className="max-w-3xl mx-auto rounded-[8px] border border-white/8 overflow-hidden">
+      <div className="max-w-3xl mx-auto rounded-[12px] border border-[#e5e7eb] bg-white overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
         <table className="w-full border-collapse text-[13px]" aria-label="Comparaison des fonctionnalités Tableo vs NordQR">
           <caption className="sr-only">Tableau comparatif des fonctionnalités : Tableo vs NordQR</caption>
           <thead>
-            <tr className="bg-[#1e2022]">
-              <th scope="col" className="text-left px-6 py-4 font-semibold text-white w-[60%]">
+            <tr className="bg-[#f5f5f5]">
+              <th scope="col" className="text-left px-6 py-4 font-semibold text-[#111111] w-[60%]">
                 Fonctionnalité
               </th>
               <th scope="col" className="px-4 py-4 text-center font-semibold w-[20%]">
-                <span className="text-[#0070d1] inline-flex items-center gap-1 justify-center">
+                <span className="text-[#111111] inline-flex items-center gap-1 justify-center">
                   <Crown className="w-3.5 h-3.5" aria-hidden="true" />
                   Tableo
                 </span>
               </th>
-              <th scope="col" className="px-4 py-4 text-center font-semibold text-[#a8a8b3] w-[20%]">
+              <th scope="col" className="px-4 py-4 text-center font-semibold text-[#6b7280] w-[20%]">
                 NordQR
               </th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r, i) => (
-              <tr key={r.feature} className={`border-t border-white/5 hover:bg-white/3 transition-colors ${i % 2 === 0 ? "bg-[#121314]" : "bg-[#161718]"}`}>
-                <td className="px-6 py-3.5 text-[#a8a8b3]">{r.feature}</td>
+              <tr key={r.feature} className={`border-t border-[#f3f4f6] hover:bg-[#f8f9fa] transition-colors ${i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}`}>
+                <td className="px-6 py-3.5 text-[#374151]">{r.feature}</td>
                 <td className="px-4 py-3.5 text-center">
                   <span className="flex justify-center">
                     <StatusIcon s={r.tableo} />
@@ -71,10 +71,10 @@ const ComparisonSection = () => (
             ))}
           </tbody>
           <tfoot>
-            <tr className="border-t border-white/8 bg-[#1e2022]">
-              <th scope="row" className="px-6 py-4 font-semibold text-white text-left text-[13px]">Score total</th>
-              <td className="px-4 py-4 text-center font-bold text-[#0070d1] text-[18px]">12/12</td>
-              <td className="px-4 py-4 text-center font-bold text-[#a8a8b3] text-[18px]">3/12</td>
+            <tr className="border-t border-[#e5e7eb] bg-[#f5f5f5]">
+              <th scope="row" className="px-6 py-4 font-semibold text-[#111111] text-left text-[13px]">Score total</th>
+              <td className="px-4 py-4 text-center font-display font-bold text-[#111111] text-[18px]">12/12</td>
+              <td className="px-4 py-4 text-center font-display font-bold text-[#6b7280] text-[18px]">3/12</td>
             </tr>
           </tfoot>
         </table>
