@@ -65,17 +65,20 @@ export default function OrdersPage() {
       return (json.orders ?? []).map(adaptOrder) as Order[];
     },
     enabled: !!restaurantId,
-    refetchInterval: 30_000,
-    refetchIntervalInBackground: false, // amélioration #9 : pas de polling si onglet inactif
+    // Polling court 8s pour quasi-temps-réel (le SSE serverless n'est pas fiable sur Vercel)
+    refetchInterval: 8_000,
+    refetchIntervalInBackground: false,
   });
 
-  const [orders, setOrders] = useState<Order[]>(DEMO_ORDERS);
+  // État initial : DEMO seulement le temps que apiOrders ne soit pas encore chargé
+  const [orders, setOrders] = useState<Order[]>(apiOrders ?? DEMO_ORDERS);
   const [filter, setFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "kanban">("list");
 
   useEffect(() => {
-    if (apiOrders && apiOrders.length > 0) setOrders(apiOrders);
+    // Synchronise même quand la DB renvoie un tableau vide (fini les DEMO qui masquent l'état réel)
+    if (apiOrders) setOrders(apiOrders);
   }, [apiOrders]);
 
   const advance = async (rawId: string) => {

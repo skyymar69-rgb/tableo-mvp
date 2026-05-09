@@ -269,10 +269,51 @@ export default function PublicMenuPage() {
     ? allDishes.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()) || d.description.toLowerCase().includes(search.toLowerCase()))
     : [];
 
-  const placeOrder = () => {
-    setScreen("done");
-    fireOrderConfetti();
-    toast.success("Commande envoyée en cuisine !");
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
+
+  /* Resolve the tableId from public menu API (matches ?table=N to a Table.id) */
+  const tablesFromApi = (publicData?.tables ?? []) as Array<{ id: string; number: string }>;
+  const matchedTable = tableFromUrl
+    ? tablesFromApi.find((t) => t.number.toLowerCase() === tableFromUrl.toLowerCase())
+    : null;
+
+  const placeOrder = async () => {
+    if (cart.length === 0) {
+      toast.error("Votre panier est vide");
+      return;
+    }
+    // Si le menu vient du fallback DEMO, on ne peut pas POST en DB
+    if (!restaurantInfo?.id) {
+      toast.success("Commande envoyée en cuisine ! (mode démo)");
+      setScreen("done");
+      fireOrderConfetti();
+      return;
+    }
+    setOrderSubmitting(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          restaurantId: restaurantInfo.id,
+          tableId: matchedTable?.id,
+          items: cart.map((c) => ({ dishId: c.dishId, quantity: c.qty })),
+          notes: orderNotes.trim() || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        toast.error(j.error ?? "Impossible d'envoyer la commande");
+        return;
+      }
+      setScreen("done");
+      fireOrderConfetti();
+      toast.success("✨ Commande envoyée en cuisine !");
+    } catch {
+      toast.error("Erreur réseau — réessayez");
+    } finally {
+      setOrderSubmitting(false);
+    }
   };
 
   if (screen === "done") {

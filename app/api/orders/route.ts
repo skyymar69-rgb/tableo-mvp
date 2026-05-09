@@ -1,13 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { requireUser } from "@/lib/api-helpers";
 
 
 export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
+  // Securité : auth + verifier que le restaurant appartient au user
+  const auth = await requireUser();
+  if ("error" in auth) return auth.error;
+
   const { searchParams } = new URL(req.url);
   const restaurantId = searchParams.get("restaurantId");
   if (!restaurantId) return NextResponse.json({ error: "restaurantId requis" }, { status: 400 });
+
+  const owns = await prisma.restaurant.findFirst({
+    where: { id: restaurantId, ownerId: auth.userId },
+    select: { id: true },
+  });
+  if (!owns) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const orders = await prisma.order.findMany({
     where: { restaurantId },
