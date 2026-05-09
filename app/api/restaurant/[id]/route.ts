@@ -16,7 +16,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!restaurant) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const body = await req.json();
-  const { name, description, address, phone, email, website, currency, timezone, logo, primaryColor, accentColor, settings } = body;
+  const {
+    name, description, address, city, phone, email, website,
+    cuisineType, seating, openingHours,
+    currency, timezone, logo, logoUrl, status,
+    primaryColor, accentColor, settings,
+  } = body;
 
   const updated = await prisma.restaurant.update({
     where: { id: params.id },
@@ -24,12 +29,18 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       ...(name && { name }),
       ...(description !== undefined && { description }),
       ...(address !== undefined && { address }),
+      ...(city !== undefined && { city }),
       ...(phone !== undefined && { phone }),
       ...(email !== undefined && { email }),
       ...(website !== undefined && { website }),
+      ...(cuisineType !== undefined && { cuisineType }),
+      ...(seating !== undefined && { seating }),
+      ...(openingHours !== undefined && { openingHours }),
       ...(currency && { currency }),
       ...(timezone && { timezone }),
-      ...(logo && { logo }),
+      // Accepte `logo` (legacy) ou `logoUrl` (nouveau)
+      ...((logoUrl ?? logo) && { logoUrl: logoUrl ?? logo }),
+      ...(status && { status }),
     },
   });
 
