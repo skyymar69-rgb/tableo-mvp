@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import { QueryProvider } from "@/components/providers/QueryProvider";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean);
 
@@ -15,11 +14,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (!isAdmin) redirect("/dashboard");
 
-  return (
-    <QueryProvider>
-      <div className="min-h-screen bg-background">
-        {children}
-      </div>
-    </QueryProvider>
-  );
+  // QueryProvider est désormais fourni par le root layout (couvre toute l'app)
+  return <div className="min-h-screen bg-background">{children}</div>;
 }

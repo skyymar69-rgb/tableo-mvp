@@ -3,6 +3,7 @@ import { Inter, Manrope, PT_Serif } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { ServiceWorkerProvider } from "@/components/providers/ServiceWorkerProvider";
 import { CookieBanner } from "@/components/CookieBanner";
@@ -252,12 +253,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Aller au contenu principal
         </a>
         <SessionProvider>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-            {children}
-            <Toaster richColors position="bottom-right" />
-            <ServiceWorkerProvider />
-            <CookieBanner />
-          </ThemeProvider>
+          <QueryProvider>
+            <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+              {children}
+              <Toaster richColors position="bottom-right" />
+              <ServiceWorkerProvider />
+              <CookieBanner />
+            </ThemeProvider>
+          </QueryProvider>
         </SessionProvider>
       </body>
     </html>
