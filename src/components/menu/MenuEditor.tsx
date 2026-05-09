@@ -12,11 +12,165 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {
   GripVertical, Plus, ArrowLeft, Check, X, ToggleLeft, ToggleRight,
-  Pencil, Trash2, ChevronDown, ChevronRight, Smartphone, Loader2,
+  Pencil, Trash2, ChevronDown, ChevronRight, Smartphone, Loader2, Languages,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn, DISH_LABEL_EMOJI } from "@/lib/utils";
 import { MobileMenuPreview } from "./MobileMenuPreview";
+
+const TRANSLATE_LANGS = [
+  { code: "EN", label: "🇬🇧 Anglais" },
+  { code: "ES", label: "🇪🇸 Espagnol" },
+  { code: "DE", label: "🇩🇪 Allemand" },
+  { code: "IT", label: "🇮🇹 Italien" },
+  { code: "PT", label: "🇵🇹 Portugais" },
+  { code: "NL", label: "🇳🇱 Néerlandais" },
+  { code: "ZH", label: "🇨🇳 Chinois" },
+  { code: "JA", label: "🇯🇵 Japonais" },
+  { code: "AR", label: "🇸🇦 Arabe" },
+];
+
+type TranslatedCategory = {
+  id: string;
+  name: string;
+  dishes: { id: string; name: string; description?: string | null }[];
+};
+
+function TranslateModal({ menu, onClose }: { menu: { id: string; name: string }; onClose: () => void }) {
+  const [lang, setLang] = useState("EN");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<TranslatedCategory[] | null>(null);
+  const [engine, setEngine] = useState("");
+
+  const translate = async () => {
+    setLoading(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/menu/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ menuId: menu.id, targetLang: lang }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? "Erreur de traduction"); return; }
+      setResult(data.translated);
+      setEngine(data.engine ?? "");
+      toast.success(`Traduction ${TRANSLATE_LANGS.find((l) => l.code === lang)?.label ?? lang} générée !`);
+    } catch {
+      toast.error("Erreur réseau");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyAll = () => {
+    if (!result) return;
+    const lines: string[] = [];
+    result.forEach((cat) => {
+      lines.push(`\n## ${cat.name}`);
+      cat.dishes.forEach((d) => {
+        lines.push(`- ${d.name}${d.description ? ` — ${d.description}` : ""}`);
+      });
+    });
+    navigator.clipboard.writeText(lines.join("\n").trim())
+      .then(() => toast.success("Traduction copiée !"))
+      .catch(() => toast.error("Impossible de copier"));
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div role="dialog" aria-modal="true" aria-labelledby="modal-translate-title"
+        className="rounded-2xl border border-border bg-card w-full max-w-2xl shadow-card animate-scale-in flex flex-col max-h-[85vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
+          <div className="flex items-center gap-2">
+            <Languages className="w-4 h-4 text-primary" />
+            <h2 id="modal-translate-title" className="text-base font-bold text-foreground">Traduire la carte</h2>
+            <span className="text-xs text-muted-foreground">— {menu.name}</span>
+          </div>
+          <button onClick={onClose} aria-label="Fermer" className="text-muted-foreground hover:text-foreground focus-ring rounded-lg p-1 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Lang selector + action */}
+        <div className="px-6 py-4 border-b border-border shrink-0">
+          <div className="flex flex-wrap gap-2 mb-4">
+            {TRANSLATE_LANGS.map((l) => (
+              <button
+                key={l.code}
+                onClick={() => { setLang(l.code); setResult(null); }}
+                aria-pressed={lang === l.code}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all border ${
+                  lang === l.code
+                    ? "bg-gradient-warm text-primary-foreground border-transparent shadow-warm"
+                    : "border-border text-muted-foreground hover:text-foreground hover:border-primary/30"
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={translate}
+            disabled={loading}
+            className="flex items-center gap-2 rounded-xl bg-gradient-warm px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-warm hover:scale-[1.02] transition-all disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Languages className="w-4 h-4" />}
+            {loading ? "Traduction en cours..." : `Traduire en ${TRANSLATE_LANGS.find((l) => l.code === lang)?.label ?? lang}`}
+          </button>
+        </div>
+
+        {/* Result */}
+        <div className="overflow-y-auto flex-1 px-6 py-4">
+          {!result && !loading && (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Sélectionnez une langue et cliquez sur Traduire.
+              <br />
+              <span className="text-xs">Propulsé par DeepL (si configuré) ou Claude IA — gratuit jusqu&apos;à 500 000 caractères/mois.</span>
+            </p>
+          )}
+          {loading && (
+            <div className="flex items-center justify-center py-12 gap-3 text-muted-foreground">
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              <span className="text-sm">Claude traduit votre carte...</span>
+            </div>
+          )}
+          {result && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-muted-foreground">
+                  {engine === "deepl" ? "✓ Traduit par DeepL" : "✓ Traduit par Claude IA"} — aperçu lecture seule
+                </p>
+                <button onClick={copyAll} className="text-xs text-primary hover:underline flex items-center gap-1">
+                  Copier tout
+                </button>
+              </div>
+              {result.map((cat) => (
+                <div key={cat.id} className="rounded-xl border border-border bg-secondary/30 overflow-hidden">
+                  <div className="px-4 py-2.5 bg-secondary/60 border-b border-border">
+                    <p className="text-xs font-bold text-foreground uppercase tracking-wide">{cat.name}</p>
+                  </div>
+                  <div className="p-3 space-y-2">
+                    {cat.dishes.map((dish) => (
+                      <div key={dish.id} className="rounded-lg bg-card border border-border/50 px-3 py-2">
+                        <p className="text-sm font-medium text-foreground">{dish.name}</p>
+                        {dish.description && <p className="text-xs text-muted-foreground mt-0.5">{dish.description}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface Dish {
   id: string;
@@ -312,6 +466,7 @@ function SortableCategory({ category, onAddDish, onToggleDish, onEditDish, onDel
 export function MenuEditor({ menu, restaurantId, onBack }: { menu: Menu; restaurantId?: string; onBack: () => void }) {
   const m = useMenuMutations(restaurantId);
   const [showPreview, setShowPreview] = useState(false);
+  const [showTranslate, setShowTranslate] = useState(false);
   const [addingDishCatId, setAddingDishCatId] = useState<string | null>(null);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   // Local optimistic for drag (re-fetch invalidate ramène la vraie source)
@@ -360,6 +515,12 @@ export function MenuEditor({ menu, restaurantId, onBack }: { menu: Menu; restaur
           </button>
           <h2 className="text-lg font-bold text-foreground flex-1">{menu.name}</h2>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowTranslate(true)}
+              className="flex items-center gap-2 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/80 hover:border-primary/30 transition-colors"
+            >
+              <Languages className="w-3.5 h-3.5 text-primary" /> Traduire
+            </button>
             <button onClick={() => setShowPreview(!showPreview)}
                     className={cn("flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
                       showPreview ? "border-primary bg-primary/10 text-primary" : "border-border bg-secondary text-foreground hover:bg-secondary/80")}>
@@ -454,6 +615,10 @@ export function MenuEditor({ menu, restaurantId, onBack }: { menu: Menu; restaur
             setEditingDish(null);
           }}
         />
+      )}
+
+      {showTranslate && (
+        <TranslateModal menu={{ id: menu.id, name: menu.name }} onClose={() => setShowTranslate(false)} />
       )}
     </div>
   );

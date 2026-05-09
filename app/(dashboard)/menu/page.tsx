@@ -218,7 +218,7 @@ export default function MenuPage() {
         )}
       </div>
 
-      {/* Amélioration #15 : Import IA Modal — role="dialog" + aria-modal + aria-labelledby */}
+      {/* Import IA Modal */}
       {showImportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) setShowImportModal(false); }}
@@ -228,19 +228,24 @@ export default function MenuPage() {
             className="rounded-2xl border border-border bg-card p-8 w-full max-w-lg shadow-card animate-scale-in"
           >
             <div className="flex items-center justify-between mb-2">
-              <h2 id="modal-import-title" className="text-lg font-bold text-foreground">Import IA</h2>
+              <h2 id="modal-import-title" className="text-lg font-bold text-foreground">Import IA — Carte & Menu</h2>
               <button onClick={() => setShowImportModal(false)} aria-label="Fermer la modale d'import IA" className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded-lg p-1">
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
-            <p className="text-sm text-muted-foreground mb-5">
-              Collez le texte de votre carte — Claude l&apos;analyse et structure automatiquement vos catégories et plats.
+            <p className="text-sm text-muted-foreground mb-1">
+              Collez simplement le texte de votre carte — restaurant, bar, cave à cocktails, épicerie fine, café…
+            </p>
+            <p className="text-xs text-primary/80 mb-4 font-medium">
+              ✦ Aucun PDF ni image requis — le texte brut suffit.
             </p>
             <textarea
               value={importText}
               onChange={(e) => setImportText(e.target.value)}
-              placeholder={"Entrées\nSoupe à l'oignon - 12€\nTartare de boeuf - 18€\n\nPlats\nMagret de canard - 28€\nSaumon mi-cuit - 26€\n\nDesserts\nFondant chocolat - 14€"}
-              rows={10}
+              placeholder={
+                "Exemple restaurant :\nEntrées\nSoupe à l'oignon - 12€\nTartare de boeuf - 18€\n\nPlats\nMagret de canard - 28€\n\n---\nExemple bar / cocktails :\nCocktails signature\nMojito Royal - 14€\nNegroni Fumé - 16€\n\nBières pression\nIPA Locale - 7€\nLager Blonde - 6€"
+              }
+              rows={12}
               className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none font-mono text-xs"
             />
             <div className="flex items-center gap-3 mt-4">
@@ -252,7 +257,7 @@ export default function MenuPage() {
                 {importing ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Claude analyse...</>
                 ) : (
-                  <><Sparkles className="w-4 h-4" /> Analyser avec Claude</>
+                  <><Sparkles className="w-4 h-4" /> Analyser et structurer</>
                 )}
               </button>
               <button onClick={() => setShowImportModal(false)} className="px-4 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
