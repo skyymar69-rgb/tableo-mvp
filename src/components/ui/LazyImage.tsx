@@ -116,16 +116,7 @@ export function HeroImage({
   const blurClass = priority ? "" : `img-blur-up ${loaded ? "loaded" : ""}`;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-primary/20 shadow-card img-overlay-warm">
-      {/* Subtle gradient vignette — Photoshop Inner Glow */}
-      <div
-        className="absolute inset-0 z-10 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse at center, transparent 60%, hsl(212,50%,8%,0.25) 100%)",
-        }}
-        aria-hidden="true"
-      />
+    <div className="relative overflow-hidden rounded-[16px] border border-[#e5e7eb] shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
       <Image
         src={src}
         alt={alt}
@@ -133,7 +124,7 @@ export function HeroImage({
         height={height}
         priority={priority}
         onLoad={() => setLoaded(true)}
-        className={`w-full h-auto ${blurClass} img-cinematic ${className}`}
+        className={`w-full h-auto ${blurClass} ${className}`}
       />
     </div>
   );

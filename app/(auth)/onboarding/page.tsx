@@ -26,6 +26,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [restaurantSlug, setRestaurantSlug] = useState("demo");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -38,6 +39,34 @@ export default function OnboardingPage() {
     website: "",
     openingHours: "",
   });
+
+  /* Au mount : récupérer le restaurant auto-créé pour pré-remplir et avoir l'id */
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/restaurant");
+        if (!res.ok) return;
+        const { restaurants } = await res.json();
+        const r = restaurants?.[0];
+        if (r) {
+          setRestaurantId(r.id);
+          setRestaurantSlug(r.slug);
+          // Pré-remplir uniquement si déjà rempli (revisite onboarding)
+          setForm((p) => ({
+            ...p,
+            name: p.name || (r.name?.startsWith("Restaurant de ") ? "" : r.name ?? ""),
+            description: p.description || r.description || "",
+            address: p.address || r.address || "",
+            phone: p.phone || r.phone || "",
+            cuisineType: p.cuisineType || r.cuisineType || "",
+            seating: p.seating || r.seating || "",
+            website: p.website || r.website || "",
+            openingHours: p.openingHours || r.openingHours || "",
+          }));
+        }
+      } catch {}
+    })();
+  }, []);
 
   useEffect(() => {
     if (step === 3) generateQR();
@@ -73,26 +102,56 @@ export default function OnboardingPage() {
         toast.error("Veuillez entrer le nom de votre restaurant");
         return;
       }
+
       setLoading(true);
+
+      // Si pas d'id (rare : auto-provisioning a échoué), on POST pour en créer un
+      if (!restaurantId) {
+        try {
+          const res = await fetch("/api/restaurant", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: form.name.trim() }),
+          });
+          if (!res.ok) throw new Error("create failed");
+          const { restaurant } = await res.json();
+          setRestaurantId(restaurant.id);
+          setRestaurantSlug(restaurant.slug);
+        } catch {
+          toast.error("Impossible de créer le restaurant. Réessayez.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // PATCH avec tous les champs du form
       try {
-        const res = await fetch("/api/restaurant", {
-          method: "POST",
+        const id = restaurantId ?? (await fetch("/api/restaurant").then(r => r.json()).then(j => j.restaurants?.[0]?.id));
+        if (!id) throw new Error("no id");
+        const res = await fetch(`/api/restaurant/${id}`, {
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: form.name.trim(),
-            address: form.address.trim() || undefined,
-            phone: form.phone.trim() || undefined,
+            description: form.description.trim() || null,
+            address: form.address.trim() || null,
+            phone: form.phone.trim() || null,
+            website: form.website.trim() || null,
+            cuisineType: form.cuisineType || null,
+            seating: form.seating || null,
+            openingHours: form.openingHours.trim() || null,
+            status: "ACTIVE",
           }),
         });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.restaurant?.slug) setRestaurantSlug(data.restaurant.slug);
-        }
+        if (!res.ok) throw new Error("patch failed");
+        const { restaurant } = await res.json();
+        if (restaurant?.slug) setRestaurantSlug(restaurant.slug);
       } catch {
-        toast.error("Erreur lors de la création du restaurant");
+        toast.error("Impossible de sauvegarder. Réessayez.");
         setLoading(false);
         return;
       }
+
       setLoading(false);
       setStep(2);
       return;

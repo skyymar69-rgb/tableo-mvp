@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ShoppingCart, Plus, Minus, X, Heart, Star, ChevronDown, Search, Wifi, Battery, Signal, ArrowLeft, Gift, Sparkles, Check, CreditCard, Banknote, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -133,7 +133,12 @@ function DishCard({ dish, qty, onAdd, onRemove, onFavorite, isFav }: {
 
 export default function PublicMenuPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const slug = params.restaurantId as string;
+  // Numéro de table récupéré depuis l'URL (?table=N) — null si scan QR sans table
+  const tableFromUrl = searchParams.get("table");
+  // ID du QR code scanné (?qr=<id>) — pour tracking d'analytics
+  const qrId = searchParams.get("qr");
 
   const { data: publicData } = useQuery({
     queryKey: ["public-menu", slug],
@@ -142,8 +147,18 @@ export default function PublicMenuPage() {
       if (!res.ok) return null;
       return res.json();
     },
-    enabled: !!slug && slug !== "demo",
+    enabled: !!slug,
   });
+
+  /* Tracking : signale au backend que ce QR vient d'être scanné */
+  useEffect(() => {
+    if (!qrId) return;
+    fetch("/api/qr/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ qrId }),
+    }).catch(() => {});
+  }, [qrId]);
 
   const restaurantInfo = publicData?.restaurant ?? null;
   const publicMenu = publicData?.menu ?? null;
@@ -152,8 +167,12 @@ export default function PublicMenuPage() {
     ...RESTAURANT,
     name: restaurantInfo.name,
     primaryColor: restaurantInfo.primaryColor ?? RESTAURANT.primaryColor,
-  } : RESTAURANT;
+    // Affiche la table scannée (ou cache si client a juste tapé l'URL)
+    table: tableFromUrl ? `Table ${tableFromUrl}` : "",
+  } : { ...RESTAURANT, table: tableFromUrl ? `Table ${tableFromUrl}` : RESTAURANT.table };
 
+  // Pas de menu publié en DB → fallback DEMO seulement pour le slug "demo" (showcase landing).
+  // Pour tout autre slug, on garde le tableau vide (UI affichera un état vide).
   const menuCategories = publicMenu?.categories?.length
     ? publicMenu.categories.map((cat: any, i: number) => ({
         id: cat.id,
@@ -173,7 +192,7 @@ export default function PublicMenuPage() {
           veg: d.veg ?? false,
         })),
       }))
-    : MENU_CATEGORIES;
+    : (slug === "demo" ? MENU_CATEGORIES : []);
 
   const [activecat, setActiveCat] = useState(0);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -250,10 +269,51 @@ export default function PublicMenuPage() {
     ? allDishes.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()) || d.description.toLowerCase().includes(search.toLowerCase()))
     : [];
 
-  const placeOrder = () => {
-    setScreen("done");
-    fireOrderConfetti();
-    toast.success("Commande envoyée en cuisine !");
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
+
+  /* Resolve the tableId from public menu API (matches ?table=N to a Table.id) */
+  const tablesFromApi = (publicData?.tables ?? []) as Array<{ id: string; number: string }>;
+  const matchedTable = tableFromUrl
+    ? tablesFromApi.find((t) => t.number.toLowerCase() === tableFromUrl.toLowerCase())
+    : null;
+
+  const placeOrder = async () => {
+    if (cart.length === 0) {
+      toast.error("Votre panier est vide");
+      return;
+    }
+    // Si le menu vient du fallback DEMO, on ne peut pas POST en DB
+    if (!restaurantInfo?.id) {
+      toast.success("Commande envoyée en cuisine ! (mode démo)");
+      setScreen("done");
+      fireOrderConfetti();
+      return;
+    }
+    setOrderSubmitting(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          restaurantId: restaurantInfo.id,
+          tableId: matchedTable?.id,
+          items: cart.map((c) => ({ dishId: c.dishId, quantity: c.qty })),
+          notes: orderNotes.trim() || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        toast.error(j.error ?? "Impossible d'envoyer la commande");
+        return;
+      }
+      setScreen("done");
+      fireOrderConfetti();
+      toast.success("✨ Commande envoyée en cuisine !");
+    } catch {
+      toast.error("Erreur réseau — réessayez");
+    } finally {
+      setOrderSubmitting(false);
+    }
   };
 
   if (screen === "done") {

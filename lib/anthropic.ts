@@ -1,11 +1,25 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-export const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+/**
+ * Client Anthropic — fallback gracieux si la clé n'est pas configurée.
+ * Les helpers ci-dessous lèvent une erreur claire plutôt que de crash au build.
+ */
+export const anthropic = process.env.ANTHROPIC_API_KEY
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  : (null as unknown as Anthropic);
+
+function ensureAnthropic(): Anthropic {
+  if (!anthropic) {
+    throw new Error(
+      "Service IA indisponible : ANTHROPIC_API_KEY n'est pas configurée. " +
+      "Ajoutez-la dans Vercel → Settings → Environment Variables.",
+    );
+  }
+  return anthropic;
+}
 
 export async function analyzeMenu(content: string): Promise<MenuAnalysisResult> {
-  const response = await anthropic.messages.create({
+  const response = await ensureAnthropic().messages.create({
     model: "claude-opus-4-7",
     max_tokens: 4096,
     messages: [
@@ -51,7 +65,7 @@ export async function generateAIInsights(data: {
   totalRevenue: number;
   conversionRate: number;
 }): Promise<string> {
-  const response = await anthropic.messages.create({
+  const response = await ensureAnthropic().messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 512,
     messages: [

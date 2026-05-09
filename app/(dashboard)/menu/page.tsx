@@ -9,29 +9,6 @@ import { useRestaurant } from "@/lib/hooks/useRestaurant";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 
-const DEMO_MENUS = [
-  {
-    id: "demo-1",
-    name: "Menu Printemps 2026",
-    isPublished: true,
-    publishedAt: new Date().toISOString(),
-    categories: [
-      { id: "c1", name: "Entrées", order: 0, dishes: [
-        { id: "d1", name: "Tartare de saumon", price: 18, description: "Avocat, citron vert, coriandre", isAvailable: true, labels: ["BESTSELLER"], allergens: ["FISH"] },
-        { id: "d2", name: "Soupe à l'oignon gratinée", price: 12, description: "Croûtons, comté AOP", isAvailable: true, labels: ["CHEF_SPECIAL"], allergens: [] },
-      ]},
-      { id: "c2", name: "Plats", order: 1, dishes: [
-        { id: "d3", name: "Saumon mi-cuit", price: 26, description: "Quinoa, épinards, beurre blanc", isAvailable: true, labels: ["BESTSELLER", "GLUTEN_FREE"], allergens: ["FISH"] },
-        { id: "d4", name: "Magret de canard", price: 28, description: "Polenta crémeuse, jus de porto", isAvailable: false, labels: [], allergens: [] },
-      ]},
-      { id: "c3", name: "Desserts", order: 2, dishes: [
-        { id: "d5", name: "Fondant au chocolat", price: 14, description: "Feuille d'or, coulis framboises", isAvailable: true, labels: ["BESTSELLER", "VEGAN"], allergens: ["EGGS"] },
-      ]},
-    ],
-    _count: { categories: 3 },
-  },
-];
-
 export default function MenuPage() {
   const [selectedMenuId, setSelectedMenuId] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -52,7 +29,7 @@ export default function MenuPage() {
     enabled: !!restaurantId,
   });
 
-  const menus = data?.menus?.length ? data.menus : DEMO_MENUS;
+  const menus = data?.menus ?? [];
 
   const publishMutation = useMutation({
     mutationFn: async ({ menuId, publish }: { menuId: string; publish: boolean }) => {
@@ -96,19 +73,29 @@ export default function MenuPage() {
       toast.error("Collez le texte de votre menu (minimum 20 caractères)");
       return;
     }
+    if (!restaurantId) {
+      toast.error("Restaurant non chargé");
+      return;
+    }
     setImporting(true);
     try {
-      const res = await fetch("/api/ai/menu-import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: importText }),
-      });
+      // Utilise /api/menu/upload qui PERSISTE en DB (Menu + Categories + Dishes)
+      const fd = new FormData();
+      fd.append("restaurantId", restaurantId);
+      fd.append("text", importText);
+      const res = await fetch("/api/menu/upload", { method: "POST", body: fd });
       const data = await res.json();
-      const total = data.totalDishes ?? (data.categories ?? []).reduce((s: number, c: any) => s + (c.dishes?.length ?? 0), 0);
+      if (!res.ok) {
+        toast.error(data.error ?? "Erreur lors de l'import");
+        return;
+      }
+      const total = data.totalDishes ?? data.menu?.categories?.reduce((s: number, c: any) => s + (c.dishes?.length ?? 0), 0) ?? 0;
       if (total > 0) {
-        toast.success(`✨ ${total} plats importés en ${data.categories?.length ?? 0} catégories !`);
+        toast.success(`✨ ${total} plats importés en ${data.menu?.categories?.length ?? 0} catégories !`);
+        queryClient.invalidateQueries({ queryKey: ["menus", restaurantId] });
         setShowImportModal(false);
         setImportText("");
+        if (data.menu?.id) setSelectedMenuId(data.menu.id);
       } else {
         toast.error("Aucun plat détecté. Vérifiez le texte.");
       }
@@ -130,7 +117,12 @@ export default function MenuPage() {
 
   if (selectedMenuId) {
     const menu = menus.find((m: any) => m.id === selectedMenuId);
-    return <MenuEditor menu={menu} onBack={() => setSelectedMenuId(null)} />;
+    if (!menu) {
+      // Le menu vient d'être supprimé : retour à la liste
+      setSelectedMenuId(null);
+      return null;
+    }
+    return <MenuEditor menu={menu} restaurantId={restaurantId} onBack={() => setSelectedMenuId(null)} />;
   }
 
   return (
@@ -174,7 +166,7 @@ export default function MenuPage() {
                         <h3 className="text-base font-semibold text-foreground">{menu.name}</h3>
                         <button
                           onClick={() => publishMutation.mutate({ menuId: menu.id, publish: !menu.isPublished })}
-                          disabled={publishMutation.isPending || menu.id.startsWith("demo")}
+                          disabled={publishMutation.isPending}
                           className={`text-[10px] px-2.5 py-1 rounded-full font-medium cursor-pointer transition-all ${menu.isPublished ? "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25" : "bg-secondary text-muted-foreground hover:bg-secondary/80"}`}
                         >
                           {menu.isPublished ? "● En ligne" : "Brouillon"}

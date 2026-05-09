@@ -1,14 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { requireUser } from "@/lib/api-helpers";
 
+
+export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
+  // Securité : auth + verifier que le restaurant appartient au user
+  const auth = await requireUser();
+  if ("error" in auth) return auth.error;
+
   const { searchParams } = new URL(req.url);
   const restaurantId = searchParams.get("restaurantId");
+  const statusFilter = searchParams.get("status"); // ex: PENDING
+  const countOnly = searchParams.get("count") === "1";
+
+  // Mode "count" pour le badge sidebar : agrege sur TOUS les restaurants du user
+  if (countOnly) {
+    const where: any = {
+      restaurant: { ownerId: auth.userId },
+    };
+    if (statusFilter) where.status = statusFilter;
+    if (restaurantId) where.restaurantId = restaurantId;
+    const count = await prisma.order.count({ where });
+    return NextResponse.json({ count });
+  }
+
   if (!restaurantId) return NextResponse.json({ error: "restaurantId requis" }, { status: 400 });
 
+  const owns = await prisma.restaurant.findFirst({
+    where: { id: restaurantId, ownerId: auth.userId },
+    select: { id: true },
+  });
+  if (!owns) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const where: any = { restaurantId };
+  if (statusFilter) where.status = statusFilter;
+
   const orders = await prisma.order.findMany({
-    where: { restaurantId },
+    where,
     include: {
       items: { include: { dish: { select: { name: true, price: true } } } },
       table: { select: { number: true } },

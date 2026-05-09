@@ -3,6 +3,7 @@ import HeroSection from "@/components/landing/HeroSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import RevenueSection from "@/components/landing/RevenueSection";
 import MobilePreviewSection from "@/components/landing/MobilePreviewSection";
+import EcosystemSection from "@/components/landing/EcosystemSection";
 import ComparisonSection from "@/components/landing/ComparisonSection";
 import SocialProofSection from "@/components/landing/SocialProofSection";
 import PricingSection from "@/components/landing/PricingSection";
@@ -17,6 +18,7 @@ export default function HomePage() {
       <FeaturesSection />
       <RevenueSection />
       <MobilePreviewSection />
+      <EcosystemSection />
       <ComparisonSection />
       <SocialProofSection />
       <PricingSection />

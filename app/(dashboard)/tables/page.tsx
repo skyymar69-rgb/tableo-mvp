@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Grid3X3, Users, Clock, CheckCircle, Plus, X, RefreshCw } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
@@ -130,10 +131,13 @@ export default function TablesPage() {
   });
 
   useEffect(() => {
-    if (apiTables && apiTables.length > 0) setLocalTables(apiTables);
+    // On synchronise meme si la DB renvoie un tableau vide
+    if (apiTables) setLocalTables(apiTables);
   }, [apiTables]);
 
-  const tables = localTables.length > 0 ? localTables : DEMO_TABLES;
+  // Si la DB est chargee (apiTables defini) et vide, on affiche le vrai etat vide.
+  // Sinon (avant chargement), on montre les DEMO_TABLES en preview.
+  const tables = apiTables !== undefined ? localTables : DEMO_TABLES;
 
   const patchMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -190,34 +194,34 @@ export default function TablesPage() {
 
   return (
     <div className="min-h-screen bg-background pb-12">
-      <div className="sticky top-0 z-10 glass border-b border-border/40 px-6 h-16 flex items-center justify-between">
-        <div>
-          <h1 className="text-base font-bold text-foreground">Plan de salle</h1>
-          <div className="flex items-center gap-2">
-            <p className="text-xs text-muted-foreground">
-              {counts.OCCUPIED} occupées · {counts.FREE} libres · {counts.RESERVED} réservées
-            </p>
+      <PageHeader
+        title="Plan de salle"
+        subtitle={
+          <span className="flex items-center gap-2">
+            <span>{counts.OCCUPIED} occupées · {counts.FREE} libres · {counts.RESERVED} réservées</span>
             {lastUpdate && (
               <span className="text-[10px] text-muted-foreground/50">· màj {lastUpdate}</span>
             )}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => refetch()}
-            className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Rafraîchir les tables"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-gradient-warm px-4 py-2 text-xs font-semibold text-primary-foreground shadow-warm hover:scale-[1.02] transition-all"
-          >
-            <Plus className="w-3.5 h-3.5" /> Ajouter
-          </button>
-        </div>
-      </div>
+          </span>
+        }
+        actions={
+          <>
+            <button
+              onClick={() => refetch()}
+              aria-label="Rafraîchir les tables"
+              className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 rounded-lg bg-gradient-warm px-4 py-2 text-xs font-semibold text-primary-foreground shadow-warm hover:scale-[1.02] transition-all"
+            >
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Ajouter
+            </button>
+          </>
+        }
+      />
 
       <div className="p-6 grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
@@ -260,23 +264,46 @@ export default function TablesPage() {
             ))}
           </div>
 
-          {/* Grid */}
+          {/* Grid — #37 : séparateurs par zone/floor */}
           {isLoading && restaurantId ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
               {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
             </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-              {filtered.map((table) => (
-                <TableCard
-                  key={table.id}
-                  table={table}
-                  selected={selected === table.id}
-                  onClick={() => setSelected(selected === table.id ? null : table.id)}
-                />
-              ))}
-            </div>
-          )}
+          ) : (() => {
+            /* Group tables by floor label; tables without floor go into "Salle principale" */
+            const groups = filtered.reduce<Record<string, TableData[]>>((acc, t) => {
+              const zone = t.floor || "Salle principale";
+              if (!acc[zone]) acc[zone] = [];
+              acc[zone].push(t);
+              return acc;
+            }, {});
+            const hasMultipleZones = Object.keys(groups).length > 1;
+            return (
+              <div className="space-y-4">
+                {Object.entries(groups).map(([zone, zoneTables]) => (
+                  <div key={zone}>
+                    {hasMultipleZones && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{zone}</span>
+                        <div className="flex-1 h-px bg-border" />
+                        <span className="text-[10px] text-muted-foreground/60">{zoneTables.length} table{zoneTables.length > 1 ? "s" : ""}</span>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+                      {zoneTables.map((table) => (
+                        <TableCard
+                          key={table.id}
+                          table={table}
+                          selected={selected === table.id}
+                          onClick={() => setSelected(selected === table.id ? null : table.id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Right panel */}
