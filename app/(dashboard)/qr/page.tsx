@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { QrCode, Download, Palette, RefreshCw, Loader2, Check, Share2, Plus, Globe, Printer, Copy, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
@@ -25,18 +26,33 @@ export default function QRPage() {
   const [customBg, setCustomBg] = useState("#FFFFFF");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [qrName, setQrName] = useState("Menu principal");
-  const [tableNumber, setTableNumber] = useState("");
+  const [selectedTableId, setSelectedTableId] = useState<string>("");
+  const [bulkLoading, setBulkLoading] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { data: restaurant } = useRestaurant();
 
+  /* Liste des vraies tables du restaurant pour le selector */
+  const { data: tablesData } = useQuery({
+    queryKey: ["tables", restaurant?.id],
+    queryFn: async () => {
+      const r = await fetch(`/api/tables?restaurantId=${restaurant?.id}`);
+      if (!r.ok) return { tables: [] };
+      return r.json();
+    },
+    enabled: !!restaurant?.id,
+  });
+  const tables = tablesData?.tables ?? [];
+  const selectedTable = tables.find((t: any) => t.id === selectedTableId);
+  const tableNumber = selectedTable?.number ?? "";
+
   const preset = COLOR_PRESETS[selectedPreset];
   const menuUrl = restaurant?.slug
-    ? `${typeof window !== "undefined" ? window.location.origin : "https://tableo.app"}/menu/${restaurant.slug}${tableNumber ? `?table=${tableNumber}` : ""}`
+    ? `${typeof window !== "undefined" ? window.location.origin : "https://tableo-sepia.vercel.app"}/menu/${restaurant.slug}${tableNumber ? `?table=${encodeURIComponent(tableNumber)}` : ""}`
     : null;
 
   const generateQR = async () => {
-    /* #34 — Validation avant génération */
     if (!qrName.trim()) { toast.error("Veuillez saisir un nom pour le QR Code"); return; }
+    if (!restaurant?.id) { toast.error("Restaurant non chargé"); return; }
     setPreviewStale(false);
     setGenerating(true);
     try {
@@ -44,24 +60,61 @@ export default function QRPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          restaurantId: restaurant?.id ?? "demo",
+          restaurantId: restaurant.id,
+          tableId: selectedTableId || undefined,
           name: qrName,
-          url: menuUrl,
-          style: { foreground: selectedPreset === COLOR_PRESETS.length ? customFg : preset.fg, background: selectedPreset === COLOR_PRESETS.length ? customBg : preset.bg },
+          style: {
+            foreground: selectedPreset === COLOR_PRESETS.length ? customFg : preset.fg,
+            background: selectedPreset === COLOR_PRESETS.length ? customBg : preset.bg,
+          },
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "Erreur génération");
+        return;
+      }
       if (data.dataUrl) {
         setQrDataUrl(data.dataUrl);
         setGenerated(true);
         toast.success("QR Code généré !");
       }
     } catch {
-      setGenerated(true);
-      setQrDataUrl("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23fff'/%3E%3Ctext x='100' y='105' text-anchor='middle' font-size='12' fill='%23000'%3EQR Demo%3C/text%3E%3C/svg%3E");
-      toast.success("QR Code généré !");
+      toast.error("Erreur réseau lors de la génération");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleBulkGenerate = async () => {
+    if (!restaurant?.id) return;
+    if (tables.length === 0) {
+      toast.error("Ajoutez d'abord des tables dans /tables");
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      const res = await fetch("/api/qr/generate-bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          restaurantId: restaurant.id,
+          style: {
+            foreground: selectedPreset === COLOR_PRESETS.length ? customFg : preset.fg,
+            background: selectedPreset === COLOR_PRESETS.length ? customBg : preset.bg,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "Erreur");
+        return;
+      }
+      toast.success(`✨ ${data.generated} QR Code(s) généré(s) ${data.skipped > 0 ? `(${data.skipped} déjà existants)` : ""}`);
+    } catch {
+      toast.error("Erreur réseau");
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -99,14 +152,22 @@ export default function QRPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="qr-table" className="text-xs font-medium text-muted-foreground mb-1.5 block">Table (optionnel)</label>
-                  <input
+                  <label htmlFor="qr-table" className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    Table {tables.length === 0 && <span className="text-yellow-400">(aucune — ajoutez-en dans /tables)</span>}
+                  </label>
+                  <select
                     id="qr-table"
-                    value={tableNumber}
-                    onChange={(e) => setTableNumber(e.target.value)}
-                    placeholder="ex: T1, T7, Terrasse..."
-                    className="w-full rounded-xl bg-secondary border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus-ring transition-colors"
-                  />
+                    value={selectedTableId}
+                    onChange={(e) => { setSelectedTableId(e.target.value); if (generated) setPreviewStale(true); }}
+                    className="w-full rounded-xl bg-secondary border border-border px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 focus-ring transition-colors"
+                  >
+                    <option value="">— Menu général (sans table) —</option>
+                    {tables.map((t: any) => (
+                      <option key={t.id} value={t.id}>
+                        Table {t.number}{t.floor ? ` · ${t.floor}` : ""}{t.capacity ? ` · ${t.capacity}p` : ""}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
@@ -209,12 +270,17 @@ export default function QRPage() {
 
             <div className="w-full mt-6 rounded-xl glass-warm p-4">
               <p className="text-xs font-medium text-foreground mb-2">Génération en masse</p>
-              <p className="text-xs text-muted-foreground mb-3">Créez automatiquement un QR Code pour chaque table de votre restaurant.</p>
+              <p className="text-xs text-muted-foreground mb-3">
+                Créez automatiquement un QR Code pour chaque table qui n&apos;en a pas encore.
+              </p>
               <button
-                onClick={() => toast.success("8 QR Codes générés pour toutes vos tables !")}
-                className="w-full rounded-lg bg-gradient-warm px-4 py-2 text-xs font-semibold text-primary-foreground hover:scale-[1.01] transition-all"
+                onClick={handleBulkGenerate}
+                disabled={bulkLoading || tables.length === 0}
+                className="w-full rounded-lg bg-gradient-warm px-4 py-2 text-xs font-semibold text-primary-foreground hover:scale-[1.01] transition-all disabled:opacity-50 inline-flex items-center justify-center gap-2"
               >
-                Générer pour toutes les tables (8)
+                {bulkLoading
+                  ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Génération...</>
+                  : `Générer pour toutes les tables${tables.length > 0 ? ` (${tables.length})` : ""}`}
               </button>
             </div>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ShoppingCart, Plus, Minus, X, Heart, Star, ChevronDown, Search, Wifi, Battery, Signal, ArrowLeft, Gift, Sparkles, Check, CreditCard, Banknote, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -133,7 +133,12 @@ function DishCard({ dish, qty, onAdd, onRemove, onFavorite, isFav }: {
 
 export default function PublicMenuPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const slug = params.restaurantId as string;
+  // Numéro de table récupéré depuis l'URL (?table=N) — null si scan QR sans table
+  const tableFromUrl = searchParams.get("table");
+  // ID du QR code scanné (?qr=<id>) — pour tracking d'analytics
+  const qrId = searchParams.get("qr");
 
   const { data: publicData } = useQuery({
     queryKey: ["public-menu", slug],
@@ -142,9 +147,18 @@ export default function PublicMenuPage() {
       if (!res.ok) return null;
       return res.json();
     },
-    // On fetch aussi pour "demo" si on a publie un menu (mais slug "demo" reste un fallback marketing).
     enabled: !!slug,
   });
+
+  /* Tracking : signale au backend que ce QR vient d'être scanné */
+  useEffect(() => {
+    if (!qrId) return;
+    fetch("/api/qr/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ qrId }),
+    }).catch(() => {});
+  }, [qrId]);
 
   const restaurantInfo = publicData?.restaurant ?? null;
   const publicMenu = publicData?.menu ?? null;
@@ -153,7 +167,9 @@ export default function PublicMenuPage() {
     ...RESTAURANT,
     name: restaurantInfo.name,
     primaryColor: restaurantInfo.primaryColor ?? RESTAURANT.primaryColor,
-  } : RESTAURANT;
+    // Affiche la table scannée (ou cache si client a juste tapé l'URL)
+    table: tableFromUrl ? `Table ${tableFromUrl}` : "",
+  } : { ...RESTAURANT, table: tableFromUrl ? `Table ${tableFromUrl}` : RESTAURANT.table };
 
   // Pas de menu publié en DB → fallback DEMO seulement pour le slug "demo" (showcase landing).
   // Pour tout autre slug, on garde le tableau vide (UI affichera un état vide).

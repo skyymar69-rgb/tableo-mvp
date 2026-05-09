@@ -131,10 +131,13 @@ export default function TablesPage() {
   });
 
   useEffect(() => {
-    if (apiTables && apiTables.length > 0) setLocalTables(apiTables);
+    // On synchronise meme si la DB renvoie un tableau vide
+    if (apiTables) setLocalTables(apiTables);
   }, [apiTables]);
 
-  const tables = localTables.length > 0 ? localTables : DEMO_TABLES;
+  // Si la DB est chargee (apiTables defini) et vide, on affiche le vrai etat vide.
+  // Sinon (avant chargement), on montre les DEMO_TABLES en preview.
+  const tables = apiTables !== undefined ? localTables : DEMO_TABLES;
 
   const patchMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
