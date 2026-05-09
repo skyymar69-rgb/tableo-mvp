@@ -77,7 +77,8 @@ export default function AnalyticsPage() {
     enabled: !!restaurantId,
   });
 
-  const chartData = analyticsData?.chart?.length ? analyticsData.chart : DEMO_WEEK;
+  // Vraies données uniquement, fallback DEMO_WEEK seulement le temps du fetch initial
+  const chartData = analyticsData ? (analyticsData.chart?.length ? analyticsData.chart : []) : DEMO_WEEK;
   const totalRevenue = chartData.reduce((s: number, d: any) => s + (d.revenue ?? 0), 0);
   const totalOrders = chartData.reduce((s: number, d: any) => s + (d.orders ?? 0), 0);
   const totalScans = chartData.reduce((s: number, d: any) => s + (d.scans ?? 0), 0);

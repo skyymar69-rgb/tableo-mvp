@@ -234,50 +234,41 @@ export function DashboardClient({
   /* #17 — Platform keyboard hint */
   const modKey = isMac() ? "⌘" : "Ctrl";
 
-  /* #18 — SSE avec auto-reconnect backoff */
+  /* Polling 8s du nombre d'orders pending pour signaler les nouveautes en live
+     (remplace l'ancien SSE qui n'etait pas fiable sur Vercel serverless) */
   useEffect(() => {
     if (!restaurantId) return;
-    let retryDelay = 5_000;
-    let retryTimer: ReturnType<typeof setTimeout>;
-    let es: EventSource;
+    let lastPending = 0;
+    let cancelled = false;
 
-    const connect = () => {
-      es = new EventSource(`/api/sse?restaurantId=${restaurantId}`);
-
-      es.onopen = () => { setSseConnected(true); retryDelay = 5_000; };
-      es.onerror = () => {
-        setSseConnected(false);
-        es.close();
-        retryTimer = setTimeout(() => {
-          retryDelay = Math.min(retryDelay * 1.5, 30_000);
-          connect();
-        }, retryDelay);
-      };
-
-      es.onmessage = (e) => {
-        const payload = JSON.parse(e.data);
-        if (payload.type === "heartbeat" && payload.kpis) {
+    const tick = async () => {
+      try {
+        const r = await fetch(`/api/orders?status=PENDING&count=1&restaurantId=${restaurantId}`, { cache: "no-store" });
+        if (!r.ok || cancelled) return;
+        const { count } = await r.json();
+        setSseConnected(true);
+        if (count > lastPending && lastPending !== 0) {
+          // Nouvelle commande détectée !
           setLiveIndicator(true);
           setLastUpdated(new Date());
-          setTimeout(() => setLiveIndicator(false), 1000);
-          if (payload.kpis.orders > 0) {
-            toast.success("Nouvelle commande reçue !", { icon: "🛎️" });
-            const id = Date.now().toString();
-            setNotifications((prev) => [
-              { id, message: "Nouvelle commande", time: "À l'instant" },
-              ...prev,
-            ].slice(0, 5));
-            /* #19 — Auto-dismiss notification après 8s */
-            setTimeout(() => {
-              setNotifications((prev) => prev.filter((n) => n.id !== id));
-            }, 8_000);
-          }
+          setTimeout(() => setLiveIndicator(false), 1500);
+          toast.success("🛎️ Nouvelle commande reçue !");
+          const id = Date.now().toString();
+          setNotifications((prev) => [
+            { id, message: "Nouvelle commande", time: "À l'instant" },
+            ...prev,
+          ].slice(0, 5));
+          setTimeout(() => setNotifications((prev) => prev.filter((n) => n.id !== id)), 8_000);
         }
-      };
+        lastPending = count;
+      } catch {
+        setSseConnected(false);
+      }
     };
 
-    connect();
-    return () => { es?.close(); clearTimeout(retryTimer); };
+    tick(); // initial fetch
+    const interval = setInterval(tick, 8_000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [restaurantId]);
 
   const handleRefresh = useCallback(async () => {

@@ -76,22 +76,10 @@ async function getDashboardData(userId: string) {
       scansToday,
       avgOrder,
     },
-    topDishes: topDishes.length > 0 ? topDishes : [
-      { id: "1", name: "Saumon Mi-Cuit", orders: 38, revenue: 912, margin: 72, trend: "+5%" },
-      { id: "2", name: "Fondant Chocolat", orders: 34, revenue: 476, margin: 85, trend: "+12%" },
-      { id: "3", name: "Risotto Truffe", orders: 29, revenue: 812, margin: 68, trend: "+3%" },
-      { id: "4", name: "Gin Artisanal", orders: 27, revenue: 324, margin: 90, trend: "+18%" },
-      { id: "5", name: "Tartare Boeuf", orders: 24, revenue: 552, margin: 65, trend: "-2%" },
-    ],
-    tables: restaurant.tables.length > 0 ? restaurant.tables : Array.from({ length: 8 }, (_, i) => ({
-      id: `t${i + 1}`, number: `T${i + 1}`, status: i % 3 === 2 ? "IDLE" : "OCCUPIED", capacity: 4
-    })),
-    chartData: chartData.length > 0 ? chartData : Array.from({ length: 7 }, (_, i) => ({
-      date: format(subDays(new Date(), 6 - i), "EEE"),
-      revenue: 2000 + Math.random() * 3000,
-      orders: 60 + Math.random() * 80,
-      scans: 150 + Math.random() * 200,
-    })),
+    // Vraies données uniquement — états vides explicites pour un rendu honnête
+    topDishes,
+    tables: restaurant.tables,
+    chartData,
     activeTables,
     totalTables,
   };

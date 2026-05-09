@@ -56,8 +56,15 @@ export default function StaffPage() {
   return (
     <div className="min-h-screen bg-background pb-12">
       <PageHeader
-        title="Équipe"
-        subtitle={`${activeCount} membre${activeCount > 1 ? "s" : ""} actif${activeCount > 1 ? "s" : ""} · ${restaurant?.name ?? "Votre restaurant"}`}
+        title={
+          <span className="inline-flex items-center gap-2">
+            Équipe
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-yellow-400/20 text-yellow-400 uppercase tracking-wider">
+              Bientôt
+            </span>
+          </span>
+        }
+        subtitle={`${activeCount} membre${activeCount > 1 ? "s" : ""} (démo) · invitations bientôt disponibles`}
         actions={
           <button
             onClick={() => setShowInvite(true)}

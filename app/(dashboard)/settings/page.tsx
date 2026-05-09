@@ -94,6 +94,7 @@ export default function SettingsPage() {
           website: restaurantForm.website,
           currency: restaurantForm.currency,
           timezone: restaurantForm.timezone,
+          openingHours: restaurantForm.openingHours,  // B4 : ajout du champ qui était perdu
           primaryColor: appearanceForm.primaryColor,
           accentColor: appearanceForm.accentColor,
           settings: {
@@ -103,7 +104,7 @@ export default function SettingsPage() {
             showCalories: appearanceForm.showCalories,
           },
         };
-        if (appearanceForm.logo) payload.logo = appearanceForm.logo;
+        if (appearanceForm.logo) payload.logoUrl = appearanceForm.logo;
         const res = await fetch(`/api/restaurant/${restaurant.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

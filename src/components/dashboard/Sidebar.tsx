@@ -212,7 +212,7 @@ export function Sidebar() {
               </div>
               <div className="border-t border-border p-1">
                 <a
-                  href="/settings?tab=restaurant&action=new"
+                  href="/onboarding"
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus-ring"
                 >
                   <Plus className="w-3.5 h-3.5" aria-hidden="true" />
