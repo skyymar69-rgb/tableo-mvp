@@ -142,7 +142,8 @@ export default function PublicMenuPage() {
       if (!res.ok) return null;
       return res.json();
     },
-    enabled: !!slug && slug !== "demo",
+    // On fetch aussi pour "demo" si on a publie un menu (mais slug "demo" reste un fallback marketing).
+    enabled: !!slug,
   });
 
   const restaurantInfo = publicData?.restaurant ?? null;
@@ -154,6 +155,8 @@ export default function PublicMenuPage() {
     primaryColor: restaurantInfo.primaryColor ?? RESTAURANT.primaryColor,
   } : RESTAURANT;
 
+  // Pas de menu publié en DB → fallback DEMO seulement pour le slug "demo" (showcase landing).
+  // Pour tout autre slug, on garde le tableau vide (UI affichera un état vide).
   const menuCategories = publicMenu?.categories?.length
     ? publicMenu.categories.map((cat: any, i: number) => ({
         id: cat.id,
@@ -173,7 +176,7 @@ export default function PublicMenuPage() {
           veg: d.veg ?? false,
         })),
       }))
-    : MENU_CATEGORIES;
+    : (slug === "demo" ? MENU_CATEGORIES : []);
 
   const [activecat, setActiveCat] = useState(0);
   const [cart, setCart] = useState<CartItem[]>([]);
