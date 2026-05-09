@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
+
+export const dynamic = "force-dynamic";
 const VALID_STATUSES = ["IDLE", "OCCUPIED", "RESERVED", "CLEANING"] as const;
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {

@@ -1013,4 +1013,107 @@ html {
   .skeleton        { animation: none !important; }
   .animate-shimmer { animation: none !important; }
   .animate-ping    { animation: none !important; }
+  .animate-badge-pulse { animation: none !important; }
+  .animate-progress-in { animation: none !important; }
+  .animate-slide-in-right { animation: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * DASHBOARD IMPROVEMENTS — 50 améliorations techniques et visuelles
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* #1 — Urgency state : commande en retard (>20 min) */
+.urgent {
+  box-shadow: 0 0 0 2px hsl(0,75%,52%,0.35);
+  border-color: hsl(0,75%,52%,0.5) !important;
+}
+.urgent-ring {
+  outline: 2px solid hsl(0,75%,52%,0.5);
+  outline-offset: 2px;
+}
+
+/* #2 — Badge pulse : notification badge animé */
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 hsl(0,75%,52%,0.4); }
+  50%       { transform: scale(1.1); box-shadow: 0 0 0 4px hsl(0,75%,52%,0); }
+}
+.animate-badge-pulse { animation: badgePulse 2s ease-in-out infinite; }
+
+/* #3 — Slide in from right (nouvelles notifications) */
+@keyframes slideInRight { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+.animate-slide-in-right { animation: slideInRight 0.22s cubic-bezier(0.34,1.2,0.64,1) forwards; }
+
+/* #4 — Progress bar animate-in from 0 (objectif quotidien) */
+@keyframes progressIn { from { width: 0%; } to { width: var(--progress-width, 0%); } }
+.animate-progress-in { animation: progressIn 1s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
+
+/* #5 — Dirty dot : point rouge "modifications non sauvegardées" */
+.dirty-dot::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: hsl(0,75%,52%);
+  margin-left: 6px;
+  vertical-align: middle;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+/* #6 — Tab filter group — boutons de filtre standardisés */
+.tab-filter {
+  @apply flex items-center gap-1 bg-secondary rounded-xl p-1;
+}
+.tab-filter-btn {
+  @apply px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 text-muted-foreground hover:text-foreground;
+}
+.tab-filter-btn[aria-pressed="true"],
+.tab-filter-btn[aria-selected="true"] {
+  @apply bg-gradient-warm text-primary-foreground;
+  box-shadow: 0 2px 8px hsl(212,100%,13%,0.20);
+}
+
+/* #7 — Kbd tag : style cohérent pour les raccourcis */
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 0.65em;
+  font-weight: 600;
+  padding: 0.15em 0.45em;
+  border-radius: 0.3em;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--secondary));
+  color: hsl(var(--muted-foreground));
+  white-space: nowrap;
+  line-height: 1.4;
+  box-shadow: 0 1px 0 hsl(var(--border));
+}
+.dark kbd { box-shadow: 0 1px 0 hsl(var(--border)), inset 0 1px 0 hsl(var(--border)/0.2); }
+
+/* #8 — Card-interactive — lift shadow plus prononcé au hover */
+.card-interactive:hover {
+  box-shadow: 0 8px 32px -8px hsl(212,100%,13%,0.12), 0 2px 8px -2px hsl(212,100%,13%,0.06);
+}
+.dark .card-interactive:hover {
+  box-shadow: 0 8px 32px -8px hsl(0,0%,0%,0.35), 0 2px 8px -2px hsl(0,0%,0%,0.20);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * PRINT STYLESHEET — QR Code print-optimized layout
+ * ──────────────────────────────────────────────────────────────────────────── */
+@media print {
+  body > *:not(#qr-print-area) { display: none !important; }
+  #qr-print-area {
+    display: flex !important;
+    width: 100vw;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  #qr-print-area img { width: 60vmin; height: 60vmin; }
 }

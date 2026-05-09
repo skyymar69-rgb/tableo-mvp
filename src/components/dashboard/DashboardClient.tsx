@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
-  TrendingUp, DollarSign, ShoppingCart, QrCode, BarChart3,
+  DollarSign, ShoppingCart, QrCode, BarChart3,
   ArrowUpRight, ArrowDownRight, Bell, Search, Calendar,
-  MoreHorizontal, Sparkles, Zap, RefreshCw, Plus,
+  Sparkles, Zap, RefreshCw, Plus, Edit2, X,
   UtensilsCrossed, Target, Users, Clock, ChevronRight,
-  CheckCircle2, AlertCircle, Activity, Wifi, WifiOff,
-  TableIcon,
+  CheckCircle2, Activity, Wifi, WifiOff, TableIcon,
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatRelative, isMac } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -28,7 +28,7 @@ interface DashboardData {
     scansToday: number;
     avgOrder: number;
   };
-  topDishes: Array<{ id: string; name: string; orders: number; revenue: number; margin: number; trend: string }>;
+  topDishes: Array<{ id: string; name: string; orders: number; revenue: number; trend: string }>;
   tables: Array<{ id: string; number: string; status: string; capacity: number }>;
   chartData: Array<{ date: string; revenue: number; orders: number; scans: number }>;
   activeTables: number;
@@ -70,7 +70,7 @@ function AnimatedNumber({ value, prefix = "", suffix = "" }: { value: number; pr
   return <span aria-live="polite" aria-atomic="true">{prefix}{formatted}{suffix}</span>;
 }
 
-/* #34 — SparkLine : gère le cas single data point (évite NaN) */
+/* #12 — SparkLine : gradient ID unique par dataKey pour éviter les collisions SVG entre cartes */
 function SparkLine({ data, dataKey, color }: { data: Array<Record<string, number | string>>; dataKey: string; color: string }) {
   const values = data.map((d) => Number(d[dataKey] ?? 0));
   /* #34 — Si une seule valeur, dupliquer pour éviter division par 0 */
@@ -153,17 +153,18 @@ function getTodayLabel(): string {
 
 const DEFAULT_DAILY_GOAL = 2000;
 
-/* #38 — KPICard extrait pour clarté + perf */
+/* #13 — KPICard cliquable : lien vers la page associée */
 function KPICard({
-  label, value, change, up, icon: Icon, sparkKey, sparkColor, format: fmt, chartData,
+  label, value, change, up, icon: Icon, sparkKey, sparkColor, format: fmt, chartData, href,
 }: {
   label: string; value: number; change: string | null; up: boolean;
   icon: React.ElementType; sparkKey: string; sparkColor: string;
   format: "currency" | "number";
   chartData: Array<Record<string, number | string>>;
+  href?: string;
 }) {
-  return (
-    <div className="group rounded-2xl border border-border bg-gradient-card p-6 transition-all duration-300 hover:border-primary/20 hover:-translate-y-0.5 hover:shadow-card cursor-default card-contained">
+  const inner = (
+    <>
       <div className="flex items-center justify-between mb-3">
         <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-gradient-warm transition-all duration-300" aria-hidden="true">
           <Icon className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
@@ -190,8 +191,14 @@ function KPICard({
       <div className="opacity-60">
         <SparkLine data={chartData} dataKey={sparkKey} color={sparkColor} />
       </div>
-    </div>
+    </>
   );
+
+  const cls = "group rounded-2xl border border-border bg-gradient-card p-6 transition-all duration-300 hover:border-primary/20 hover:-translate-y-0.5 hover:shadow-card card-contained block";
+
+  return href
+    ? <a href={href} className={cls}>{inner}</a>
+    : <div className={`${cls} cursor-default`}>{inner}</div>;
 }
 
 export function DashboardClient({
@@ -203,6 +210,7 @@ export function DashboardClient({
   restaurantId: string;
   dailyGoal?: number;
 }) {
+  const router = useRouter();
   const [period, setPeriod] = useState<"today" | "week" | "month">("today");
   const [kpis, setKpis] = useState(data?.kpis);
   const [sseConnected, setSseConnected] = useState(false);
@@ -210,39 +218,99 @@ export function DashboardClient({
   const [notifications, setNotifications] = useState<Array<{ id: string; message: string; time: string }>>([]);
   const [chartType, setChartType] = useState<"revenue" | "orders">("revenue");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [periodChartData, setPeriodChartData] = useState<DashboardData["chartData"] | null>(null);
+  const [periodLoading, setPeriodLoading] = useState(false);
+  /* #14 — Objectif éditable avec persistence localStorage */
+  const [goalValue, setGoalValue] = useState<number>(() => {
+    if (typeof window === "undefined") return dailyGoal;
+    return Number(localStorage.getItem("tableo-daily-goal") ?? dailyGoal);
+  });
+  const [goalEditing, setGoalEditing] = useState(false);
+  const [goalInput, setGoalInput] = useState(String(dailyGoal));
+  /* #15 — Timestamp dernière actualisation */
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  /* #16 — Confetti objectif déjà célébré (évite répétition) */
+  const goalCelebratedRef = useRef(false);
+  /* #17 — Platform keyboard hint */
+  const modKey = isMac() ? "⌘" : "Ctrl";
 
+  /* Polling 8s du nombre d'orders pending pour signaler les nouveautes en live
+     (remplace l'ancien SSE qui n'etait pas fiable sur Vercel serverless) */
   useEffect(() => {
     if (!restaurantId) return;
-    const es = new EventSource(`/api/sse?restaurantId=${restaurantId}`);
+    let lastPending = 0;
+    let cancelled = false;
 
-    es.onopen = () => setSseConnected(true);
-    es.onerror = () => setSseConnected(false);
-
-    es.onmessage = (e) => {
-      const payload = JSON.parse(e.data);
-      if (payload.type === "heartbeat" && payload.kpis) {
-        setLiveIndicator(true);
-        setTimeout(() => setLiveIndicator(false), 1000);
-        if (payload.kpis.orders > 0) {
-          toast.success("Nouvelle commande reçue !", { icon: "🛎️" });
+    const tick = async () => {
+      try {
+        const r = await fetch(`/api/orders?status=PENDING&count=1&restaurantId=${restaurantId}`, { cache: "no-store" });
+        if (!r.ok || cancelled) return;
+        const { count } = await r.json();
+        setSseConnected(true);
+        if (count > lastPending && lastPending !== 0) {
+          // Nouvelle commande détectée !
+          setLiveIndicator(true);
+          setLastUpdated(new Date());
+          setTimeout(() => setLiveIndicator(false), 1500);
+          toast.success("🛎️ Nouvelle commande reçue !");
+          const id = Date.now().toString();
           setNotifications((prev) => [
-            { id: Date.now().toString(), message: "Nouvelle commande", time: "À l'instant" },
+            { id, message: "Nouvelle commande", time: "À l'instant" },
             ...prev,
           ].slice(0, 5));
+          setTimeout(() => setNotifications((prev) => prev.filter((n) => n.id !== id)), 8_000);
         }
+        lastPending = count;
+      } catch {
+        setSseConnected(false);
       }
     };
 
-    return () => es.close();
+    tick(); // initial fetch
+    const interval = setInterval(tick, 8_000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [restaurantId]);
 
-  /* #39 — Bouton refresh avec animation spinner */
-  const handleRefresh = useCallback(async () => {
+  const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setIsRefreshing(false);
+    setLastUpdated(new Date());
+    router.refresh();
+    setTimeout(() => setIsRefreshing(false), 400);
     toast.success("Données actualisées !");
-  }, []);
+  }, [router]);
+
+  /* #20 — Raccourcis clavier ⌘N / ⌘M / ⌘R */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const mod = isMac() ? e.metaKey : e.ctrlKey;
+      if (!mod) return;
+      if (e.key === "n") { e.preventDefault(); router.push("/orders"); }
+      if (e.key === "m") { e.preventDefault(); router.push("/menu"); }
+      if (e.key === "r" && !e.shiftKey) { e.preventDefault(); handleRefresh(); }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [router, handleRefresh]);
+
+  /* Fetch chart data when period changes (week/month use analytics API) */
+  useEffect(() => {
+    if (period === "today" || !restaurantId) {
+      setPeriodChartData(null);
+      return;
+    }
+    let cancelled = false;
+    setPeriodLoading(true);
+    fetch(`/api/analytics?restaurantId=${restaurantId}&range=${period === "week" ? "week" : "month"}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (json.chart?.length) setPeriodChartData(json.chart);
+        else setPeriodChartData(null);
+      })
+      .catch(() => setPeriodChartData(null))
+      .finally(() => { if (!cancelled) setPeriodLoading(false); });
+    return () => { cancelled = true; };
+  }, [period, restaurantId]);
 
   if (!data) {
     return (
@@ -281,11 +349,19 @@ export function DashboardClient({
     );
   }
 
-  /* #33 — kpiCards mémorisés */
+  /* #21 — Pourcentage d'objectif basé sur goalValue éditable */
   const revenueGoalPct = useMemo(
-    () => Math.min(Math.round(((kpis?.revenueToday ?? 0) / dailyGoal) * 100), 100),
-    [kpis?.revenueToday, dailyGoal]
+    () => Math.min(Math.round(((kpis?.revenueToday ?? 0) / goalValue) * 100), 100),
+    [kpis?.revenueToday, goalValue]
   );
+
+  /* #22 — Confetti quand l'objectif est atteint (1 seule fois) */
+  useEffect(() => {
+    if (revenueGoalPct >= 100 && !goalCelebratedRef.current) {
+      goalCelebratedRef.current = true;
+      import("@/lib/confetti").then(({ fireOrderConfetti }) => fireOrderConfetti()).catch(() => {});
+    }
+  }, [revenueGoalPct]);
   const occupancyRate = data.totalTables > 0 ? Math.round((data.activeTables / data.totalTables) * 100) : 0;
 
   const kpiCards = useMemo(() => [
@@ -298,6 +374,7 @@ export function DashboardClient({
       sparkKey: "revenue",
       sparkColor: "hsl(24, 95%, 58%)",
       format: "currency" as const,
+      href: "/analytics",
     },
     {
       label: "Commandes",
@@ -308,6 +385,7 @@ export function DashboardClient({
       sparkKey: "orders",
       sparkColor: "hsl(217, 91%, 60%)",
       format: "number" as const,
+      href: "/orders",
     },
     {
       label: "Scans QR",
@@ -318,6 +396,7 @@ export function DashboardClient({
       sparkKey: "scans",
       sparkColor: "hsl(160, 60%, 45%)",
       format: "number" as const,
+      href: "/qr",
     },
     {
       label: "Panier moyen",
@@ -328,11 +407,12 @@ export function DashboardClient({
       sparkKey: "revenue",
       sparkColor: "hsl(280, 60%, 60%)",
       format: "currency" as const,
+      href: "/analytics",
     },
   ], [kpis]);
 
-  /* #35 — Label du chart selon la période */
   const chartPeriodLabel = period === "today" ? "aujourd'hui" : period === "week" ? "cette semaine" : "ce mois";
+  const activeChartData = periodChartData ?? data?.chartData ?? [];
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -346,6 +426,8 @@ export function DashboardClient({
             </h1>
             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
               <span className="capitalize">{getTodayLabel()}</span>
+              {/* #15 — Timestamp dernière actualisation */}
+              <span className="text-[10px] text-muted-foreground/50">· màj {formatRelative(lastUpdated)}</span>
               {/* #40 — SSE connection status */}
               <span
                 aria-live="polite"
@@ -395,7 +477,15 @@ export function DashboardClient({
           </div>
           <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
             {(["today", "week", "month"] as const).map((p) => (
-              <button key={p} onClick={() => setPeriod(p)} aria-pressed={period === p} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all focus-ring ${period === p ? "bg-gradient-warm text-primary-foreground shadow-warm" : "text-muted-foreground hover:text-foreground"}`}>
+              <button
+                key={p}
+                onClick={() => !periodLoading && setPeriod(p)}
+                aria-pressed={period === p}
+                aria-disabled={periodLoading}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all focus-ring ${
+                  period === p ? "bg-gradient-warm text-primary-foreground shadow-warm" : "text-muted-foreground hover:text-foreground"
+                } ${periodLoading ? "opacity-50 cursor-wait" : ""}`}
+              >
                 {p === "today" ? "Aujourd'hui" : p === "week" ? "Semaine" : "Mois"}
               </button>
             ))}
@@ -407,8 +497,8 @@ export function DashboardClient({
         {/* Quick Actions — #36 : hints clavier */}
         <div className="flex items-center gap-2 flex-wrap">
           {[
-            { label: "Nouvelle commande", icon: Plus,           href: "/orders",    color: "bg-gradient-warm text-primary-foreground shadow-warm", hint: "⌘N" },
-            { label: "Ajouter un plat",   icon: UtensilsCrossed,href: "/menu",      color: "bg-secondary border border-border text-foreground",    hint: "⌘M" },
+            { label: "Nouvelle commande", icon: Plus,           href: "/orders",    color: "bg-gradient-warm text-primary-foreground shadow-warm", hint: `${modKey}N` },
+            { label: "Ajouter un plat",   icon: UtensilsCrossed,href: "/menu",      color: "bg-secondary border border-border text-foreground",    hint: `${modKey}M` },
             { label: "Générer QR",        icon: QrCode,          href: "/qr",        color: "bg-secondary border border-border text-foreground",    hint: null },
             { label: "Analytics",         icon: BarChart3,       href: "/analytics", color: "bg-secondary border border-border text-foreground",    hint: null },
             { label: "CRM clients",       icon: Users,           href: "/crm",       color: "bg-secondary border border-border text-foreground",    hint: null },
@@ -429,13 +519,48 @@ export function DashboardClient({
           ))}
         </div>
 
-        {/* Daily Goal Banner */}
+        {/* Daily Goal Banner — #14 objectif éditable */}
         <div className="rounded-2xl border border-border bg-gradient-card p-4 card-contained">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-primary" aria-hidden="true" />
               <span className="text-sm font-semibold text-foreground">Objectif du jour</span>
-              <span className="text-xs text-muted-foreground">— {formatCurrency(dailyGoal)}</span>
+              {goalEditing ? (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const v = parseFloat(goalInput.replace(",", "."));
+                    if (!isNaN(v) && v > 0) {
+                      setGoalValue(v);
+                      localStorage.setItem("tableo-daily-goal", String(v));
+                    }
+                    setGoalEditing(false);
+                  }}
+                  className="flex items-center gap-1"
+                >
+                  <input
+                    autoFocus
+                    type="number"
+                    min="1"
+                    value={goalInput}
+                    onChange={(e) => setGoalInput(e.target.value)}
+                    className="w-24 rounded-md bg-secondary border border-primary/40 px-2 py-0.5 text-xs text-foreground focus:outline-none focus:border-primary"
+                    aria-label="Modifier l'objectif journalier"
+                  />
+                  <span className="text-xs text-muted-foreground">€</span>
+                  <button type="submit" className="text-[10px] font-semibold text-primary hover:underline focus-ring rounded px-1">OK</button>
+                  <button type="button" onClick={() => setGoalEditing(false)} className="text-[10px] text-muted-foreground hover:text-foreground focus-ring rounded px-1">Annuler</button>
+                </form>
+              ) : (
+                <button
+                  onClick={() => { setGoalInput(String(goalValue)); setGoalEditing(true); }}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors focus-ring rounded group"
+                  aria-label="Modifier l'objectif journalier"
+                >
+                  <span>— {formatCurrency(goalValue)}</span>
+                  <Edit2 className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" aria-hidden="true" />
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-bold text-foreground tabular-nums">{revenueGoalPct}%</span>
@@ -451,14 +576,14 @@ export function DashboardClient({
             className="w-full h-2.5 rounded-full bg-border overflow-hidden"
           >
             <div
-              className={`h-full rounded-full transition-all duration-1000 ${revenueGoalPct >= 100 ? "bg-emerald-400" : "bg-gradient-warm"}`}
-              style={{ width: `${revenueGoalPct}%` }}
+              className={`h-full rounded-full transition-all duration-1000 animate-progress-in ${revenueGoalPct >= 100 ? "bg-emerald-400" : "bg-gradient-warm"}`}
+              style={{ width: `${revenueGoalPct}%`, ["--progress-width" as string]: `${revenueGoalPct}%` }}
             />
           </div>
           <p className="text-xs text-muted-foreground mt-1.5">
             {revenueGoalPct >= 100
               ? "🎉 Objectif atteint !"
-              : `${formatCurrency(kpis?.revenueToday ?? 0)} réalisés · ${formatCurrency(Math.max(dailyGoal - (kpis?.revenueToday ?? 0), 0))} restants`}
+              : `${formatCurrency(kpis?.revenueToday ?? 0)} réalisés · ${formatCurrency(Math.max(goalValue - (kpis?.revenueToday ?? 0), 0))} restants`}
           </p>
         </div>
 
@@ -474,9 +599,11 @@ export function DashboardClient({
           <div className="lg:col-span-2 rounded-2xl border border-border bg-gradient-card p-6 card-contained">
             <div className="flex items-center justify-between mb-6">
               <div>
-                {/* #35 — Label chart selon période */}
-                <h3 className="text-base font-semibold text-foreground capitalize">
+                <h3 className="text-base font-semibold text-foreground capitalize flex items-center gap-2">
                   {chartType === "revenue" ? "Revenu" : "Commandes"} {chartPeriodLabel}
+                  {periodLoading && (
+                    <span className="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" aria-label="Chargement" />
+                  )}
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">vs. période précédente</p>
               </div>
@@ -490,7 +617,7 @@ export function DashboardClient({
             </div>
             <ResponsiveContainer width="100%" height={200}>
               {chartType === "revenue" ? (
-                <AreaChart data={data.chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                <AreaChart data={activeChartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%"   stopColor="hsl(244,97%,35%)" stopOpacity={0.28} />
@@ -505,7 +632,7 @@ export function DashboardClient({
                   <Area type="monotone" dataKey="revenue" name="Revenu" stroke="hsl(244,97%,35%)" strokeWidth={2} fill="url(#revenueGrad)" dot={false} activeDot={{ r: 4, fill: "hsl(302,30%,40%)", stroke: "hsl(244,97%,35%)", strokeWidth: 2 }} />
                 </AreaChart>
               ) : (
-                <BarChart data={data.chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                <BarChart data={activeChartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="ordersGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%"   stopColor="hsl(212,100%,13%)" />
@@ -610,8 +737,7 @@ export function DashboardClient({
                     <th scope="col" className="pb-3 font-medium">Plat</th>
                     <th scope="col" className="pb-3 font-medium text-right">Cmds</th>
                     <th scope="col" className="pb-3 font-medium text-right">Revenu</th>
-                    <th scope="col" className="pb-3 font-medium text-right">Marge</th>
-                    <th scope="col" className="pb-3 font-medium text-right">Tendance</th>
+                    <th scope="col" className="pb-3 font-medium text-right">Tendance 7j</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -638,18 +764,9 @@ export function DashboardClient({
                         </td>
                         <td className="py-3 text-right text-muted-foreground tabular-nums text-xs">{d.orders}</td>
                         <td className="py-3 text-right font-semibold text-foreground tabular-nums text-xs">{formatCurrency(d.revenue)}</td>
-                        <td className="py-3 text-right tabular-nums text-xs">
-                          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                            d.margin >= 80 ? "bg-emerald-500/10 text-emerald-500"
-                            : d.margin >= 60 ? "bg-yellow-500/10 text-yellow-500"
-                            : "bg-red-500/10 text-red-500"
-                          }`}>
-                            {d.margin}%
-                          </span>
-                        </td>
-                        <td className={`py-3 text-right font-medium tabular-nums text-xs ${isTrendUp ? "text-emerald-500" : "text-red-400"}`}>
+                        <td className={`py-3 text-right font-medium tabular-nums text-xs ${isTrendUp ? "text-emerald-500" : d.trend === "—" ? "text-muted-foreground" : "text-red-400"}`}>
                           <span className="inline-flex items-center gap-0.5">
-                            {isTrendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                            {d.trend !== "—" && (isTrendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />)}
                             {d.trend}
                           </span>
                         </td>
@@ -663,20 +780,40 @@ export function DashboardClient({
 
           {/* Activity Feed */}
           <div className="rounded-2xl border border-border bg-gradient-card p-6 card-contained">
-            <div className="flex items-center gap-2 mb-4">
-              <Activity className="w-4 h-4 text-primary" aria-hidden="true" />
-              <h3 className="text-base font-semibold text-foreground">Activité récente</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary" aria-hidden="true" />
+                <h3 className="text-base font-semibold text-foreground">Activité récente</h3>
+              </div>
+              {/* #23 — Bouton "Tout effacer" si notifications actives */}
+              {notifications.length > 0 && (
+                <button
+                  onClick={() => setNotifications([])}
+                  className="text-[10px] text-muted-foreground hover:text-foreground transition-colors focus-ring rounded"
+                  aria-label="Effacer toutes les notifications"
+                >
+                  Tout effacer
+                </button>
+              )}
             </div>
             <div className="space-y-3" aria-live="polite" aria-label="Activité récente">
               {notifications.length > 0 ? notifications.map((n) => (
-                <div key={n.id} className="flex items-start gap-3 animate-scale-in">
+                <div key={n.id} className="flex items-start gap-3 animate-scale-in group">
                   <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
                     <ShoppingCart className="w-3.5 h-3.5 text-emerald-400" />
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-foreground">{n.message}</p>
                     <p className="text-[10px] text-muted-foreground">{n.time}</p>
                   </div>
+                  {/* #23 — Dismiss individuel */}
+                  <button
+                    onClick={() => setNotifications((prev) => prev.filter((x) => x.id !== n.id))}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 w-5 h-5 rounded-md hover:bg-secondary flex items-center justify-center focus-ring"
+                    aria-label={`Fermer la notification : ${n.message}`}
+                  >
+                    <X className="w-3 h-3 text-muted-foreground" />
+                  </button>
                 </div>
               )) : (
                 /* #45 — Activity feed placeholder amélioré */

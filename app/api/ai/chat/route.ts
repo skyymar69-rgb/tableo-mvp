@@ -5,6 +5,8 @@ import { anthropic } from "@/lib/anthropic";
 import { prisma } from "@/lib/db";
 import { subDays, startOfDay } from "date-fns";
 
+
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {

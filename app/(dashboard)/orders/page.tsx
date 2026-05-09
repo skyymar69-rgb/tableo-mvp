@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingBag, Clock, Check, ChefHat, Truck, X, RefreshCw, LayoutList, Columns } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { ShoppingBag, Clock, Check, ChefHat, Truck, X, RefreshCw, LayoutList, Columns, AlertCircle, Download, Search } from "lucide-react";
+import { formatCurrency, formatElapsed } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,14 +27,16 @@ const NEXT_STATUS: Record<string, string> = {
 };
 
 type OrderItem = { name: string; qty: number; price: number };
-type Order = { id: string; rawId: string; table: string; status: string; total: number; items: OrderItem[]; createdAt: string; customer: string | null };
+type Order = { id: string; rawId: string; table: string; status: string; total: number; items: OrderItem[]; createdAt: string; createdAtIso: string; customer: string | null };
 
+/* Demo orders use relative past times so elapsed timers work */
+const now = Date.now();
 const DEMO_ORDERS: Order[] = [
-  { id: "ORD-001", rawId: "demo-1", table: "T4", status: "PREPARING", total: 86.50, items: [{ name: "Saumon Mi-Cuit", qty: 2, price: 26 }, { name: "Fondant Chocolat", qty: 2, price: 14 }, { name: "Verre de vin", qty: 2, price: 6.25 }], createdAt: "20:14", customer: null },
-  { id: "ORD-002", rawId: "demo-2", table: "T7", status: "PENDING", total: 34.00, items: [{ name: "Risotto Truffe", qty: 1, price: 28 }, { name: "Eau minérale", qty: 1, price: 6 }], createdAt: "20:21", customer: "Marie D." },
-  { id: "ORD-003", rawId: "demo-3", table: "T2", status: "READY", total: 112.00, items: [{ name: "Tartare Boeuf", qty: 3, price: 24 }, { name: "Gin Artisanal", qty: 4, price: 12 }], createdAt: "19:58", customer: null },
-  { id: "ORD-004", rawId: "demo-4", table: "T1", status: "DELIVERED", total: 67.00, items: [{ name: "Magret de Canard", qty: 2, price: 28 }, { name: "Dessert du chef", qty: 1, price: 11 }], createdAt: "19:30", customer: "Thomas M." },
-  { id: "ORD-005", rawId: "demo-5", table: "T5", status: "CONFIRMED", total: 45.50, items: [{ name: "Soupe à l'oignon", qty: 2, price: 12 }, { name: "Saumon Mi-Cuit", qty: 1, price: 26 }], createdAt: "20:28", customer: null },
+  { id: "ORD-001", rawId: "demo-1", table: "T4", status: "PREPARING", total: 86.50, items: [{ name: "Saumon Mi-Cuit", qty: 2, price: 26 }, { name: "Fondant Chocolat", qty: 2, price: 14 }, { name: "Verre de vin", qty: 2, price: 6.25 }], createdAt: "20:14", createdAtIso: new Date(now - 25 * 60_000).toISOString(), customer: null },
+  { id: "ORD-002", rawId: "demo-2", table: "T7", status: "PENDING",   total: 34.00, items: [{ name: "Risotto Truffe", qty: 1, price: 28 }, { name: "Eau minérale", qty: 1, price: 6 }], createdAt: "20:21", createdAtIso: new Date(now - 7 * 60_000).toISOString(), customer: "Marie D." },
+  { id: "ORD-003", rawId: "demo-3", table: "T2", status: "READY",     total: 112.00, items: [{ name: "Tartare Boeuf", qty: 3, price: 24 }, { name: "Gin Artisanal", qty: 4, price: 12 }], createdAt: "19:58", createdAtIso: new Date(now - 38 * 60_000).toISOString(), customer: null },
+  { id: "ORD-004", rawId: "demo-4", table: "T1", status: "DELIVERED", total: 67.00, items: [{ name: "Magret de Canard", qty: 2, price: 28 }, { name: "Dessert du chef", qty: 1, price: 11 }], createdAt: "19:30", createdAtIso: new Date(now - 57 * 60_000).toISOString(), customer: "Thomas M." },
+  { id: "ORD-005", rawId: "demo-5", table: "T5", status: "CONFIRMED", total: 45.50, items: [{ name: "Soupe à l'oignon", qty: 2, price: 12 }, { name: "Saumon Mi-Cuit", qty: 1, price: 26 }], createdAt: "20:28", createdAtIso: new Date(now - 3 * 60_000).toISOString(), customer: null },
 ];
 
 function adaptOrder(o: any): Order {
@@ -45,6 +47,7 @@ function adaptOrder(o: any): Order {
     status: o.status,
     total: o.total,
     createdAt: new Date(o.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+    createdAtIso: o.createdAt,
     customer: o.customer?.name ?? null,
     items: (o.items ?? []).map((i: any) => ({ name: i.dish?.name ?? "Plat", qty: i.quantity, price: i.unitPrice })),
   };
@@ -62,17 +65,21 @@ export default function OrdersPage() {
       return (json.orders ?? []).map(adaptOrder) as Order[];
     },
     enabled: !!restaurantId,
-    refetchInterval: 30_000,
-    refetchIntervalInBackground: false, // amélioration #9 : pas de polling si onglet inactif
+    // Polling court 8s pour quasi-temps-réel (le SSE serverless n'est pas fiable sur Vercel)
+    refetchInterval: 8_000,
+    refetchIntervalInBackground: false,
   });
 
-  const [orders, setOrders] = useState<Order[]>(DEMO_ORDERS);
+  // État initial : DEMO seulement le temps que apiOrders ne soit pas encore chargé
+  const [orders, setOrders] = useState<Order[]>(apiOrders ?? DEMO_ORDERS);
   const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "kanban">("list");
 
   useEffect(() => {
-    if (apiOrders && apiOrders.length > 0) setOrders(apiOrders);
+    // Synchronise même quand la DB renvoie un tableau vide (fini les DEMO qui masquent l'état réel)
+    if (apiOrders) setOrders(apiOrders);
   }, [apiOrders]);
 
   const advance = async (rawId: string) => {
@@ -120,21 +127,33 @@ export default function OrdersPage() {
     }
   };
 
-  const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
-  const selected = orders.find((o) => o.rawId === selectedId);
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return orders.filter((o) => {
+      const matchFilter = filter === "all" || o.status === filter;
+      const matchSearch = !q || o.id.toLowerCase().includes(q) || o.table.toLowerCase().includes(q) || (o.customer ?? "").toLowerCase().includes(q);
+      return matchFilter && matchSearch;
+    });
+  }, [orders, filter, search]);
+  const selected = useMemo(() => orders.find((o) => o.rawId === selectedId), [orders, selectedId]);
 
-  const counts = {
+  const counts = useMemo(() => ({
     PENDING: orders.filter((o) => o.status === "PENDING").length,
     PREPARING: orders.filter((o) => o.status === "PREPARING").length,
     READY: orders.filter((o) => o.status === "READY").length,
-  };
+  }), [orders]);
+
+  const totalRevenue = useMemo(
+    () => orders.filter((o) => ["DELIVERED", "CONFIRMED", "PREPARING", "READY"].includes(o.status)).reduce((s, o) => s + o.total, 0),
+    [orders]
+  );
 
   return (
     <div className="min-h-screen bg-background pb-12">
       {/* #37 — PageHeader réutilisable remplace le sticky header inline */}
       <PageHeader
         title="Commandes"
-        subtitle={`${orders.length} commande${orders.length > 1 ? "s" : ""} aujourd'hui`}
+        subtitle={`${orders.length} commande${orders.length > 1 ? "s" : ""} · ${formatCurrency(totalRevenue)} encaissés`}
         actions={
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -162,6 +181,18 @@ export default function OrdersPage() {
                 <Columns className="w-3.5 h-3.5" aria-hidden="true" />
               </button>
             </div>
+            <button
+              onClick={() => {
+                if (!restaurantId) return;
+                window.open(`/api/orders/export?restaurantId=${restaurantId}`, "_blank");
+              }}
+              disabled={!restaurantId}
+              aria-label="Exporter les commandes en CSV"
+              title="Export CSV"
+              className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-ring disabled:opacity-40"
+            >
+              <Download className="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
             <button
               onClick={() => refetch()}
               aria-label="Actualiser les commandes"
@@ -230,10 +261,39 @@ export default function OrdersPage() {
       ) : (
       <div className="p-6 grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center gap-1 bg-secondary rounded-xl p-1 w-fit">
-            {[["all", "Toutes"], ["PENDING", "En attente"], ["PREPARING", "En cuisine"], ["READY", "Prêtes"], ["DELIVERED", "Livrées"]].map(([key, label]) => (
-              <button key={key} onClick={() => setFilter(key)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filter === key ? "bg-gradient-warm text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher par n°, table ou client..."
+              aria-label="Rechercher une commande"
+              className="w-full rounded-xl bg-secondary border border-border pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+            />
+          </div>
+          {/* Compteur par statut dans les onglets filtres */}
+          <div className="flex items-center gap-1 bg-secondary rounded-xl p-1 w-fit flex-wrap">
+            {[
+              ["all",       "Toutes",       orders.length],
+              ["PENDING",   "En attente",   orders.filter(o => o.status === "PENDING").length],
+              ["PREPARING", "En cuisine",   orders.filter(o => o.status === "PREPARING").length],
+              ["READY",     "Prêtes",       orders.filter(o => o.status === "READY").length],
+              ["DELIVERED", "Livrées",      orders.filter(o => o.status === "DELIVERED").length],
+            ].map(([key, label, count]) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key as string)}
+                aria-pressed={filter === key}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all focus-ring ${filter === key ? "bg-gradient-warm text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
                 {label}
+                {(count as number) > 0 && (
+                  <span className={`text-[10px] tabular-nums px-1.5 py-0.5 rounded-full ${filter === key ? "bg-primary-foreground/20 text-primary-foreground" : "bg-border text-muted-foreground"}`}>
+                    {count}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -258,8 +318,12 @@ export default function OrdersPage() {
               const cfg = STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG];
               const nextStatus = NEXT_STATUS[order.status];
               const isSelected = selectedId === order.rawId;
+              /* #28 — Calcul urgence : >20min en PENDING/PREPARING */
+              const elapsedMs = Date.now() - new Date(order.createdAtIso).getTime();
+              const elapsedMin = Math.floor(elapsedMs / 60_000);
+              const isUrgent = ["PENDING", "PREPARING"].includes(order.status) && elapsedMin >= 20;
               return (
-                <article key={order.rawId} className={`rounded-2xl border bg-gradient-card transition-all hover:border-primary/20 ${isSelected ? "border-primary/40 shadow-warm" : "border-border"}`}>
+                <article key={order.rawId} className={`rounded-2xl border bg-gradient-card transition-all hover:border-primary/20 ${isSelected ? "border-primary/40 shadow-warm" : isUrgent ? "border-red-500/40 urgent" : "border-border"}`}>
                   {/* #33 clickable region as accessible button */}
                   <button
                     onClick={() => setSelectedId(isSelected ? null : order.rawId)}
@@ -274,7 +338,13 @@ export default function OrdersPage() {
                         {order.customer && <span className="text-xs text-muted-foreground">• {order.customer}</span>}
                       </div>
                       <div className="flex items-center gap-3">
-                        <time className="text-xs text-muted-foreground">{order.createdAt}</time>
+                        {/* #28 — Timer écoulé + indicateur d'urgence */}
+                        {["PENDING", "PREPARING", "CONFIRMED"].includes(order.status) && (
+                          <span className={`flex items-center gap-1 text-[10px] font-medium tabular-nums ${isUrgent ? "text-red-400 animate-badge-pulse" : "text-muted-foreground"}`}>
+                            <Clock className="w-3 h-3" aria-hidden="true" />
+                            {formatElapsed(order.createdAtIso)}
+                          </span>
+                        )}
                         <span className={`text-[10px] px-2 py-1 rounded-full font-medium flex items-center gap-1 ${cfg.color}`}>
                           <cfg.icon className="w-2.5 h-2.5" aria-hidden="true" />
                           {cfg.label}

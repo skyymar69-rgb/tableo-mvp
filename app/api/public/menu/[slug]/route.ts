@@ -13,6 +13,7 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
     where: { slug },
     include: {
       settings: true,
+      tables: { select: { id: true, number: true } }, // pour resolution tableId cote client
       menus: {
         where: { isPublished: true },
         include: {
@@ -41,9 +42,10 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
     restaurant: {
       id: restaurant.id,
       name: restaurant.name,
-      description: null,
+      description: restaurant.description,
       primaryColor: restaurant.settings?.primaryColor ?? "#F89544",
     },
+    tables: restaurant.tables, // [{ id, number }] pour matcher ?table=N
     menu: menu
       ? {
           categories: menu.categories.map((cat) => ({

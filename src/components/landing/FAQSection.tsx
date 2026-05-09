@@ -61,24 +61,22 @@ function AccordionItem({
   return (
     <div
       role="listitem"
-      className={`rounded-[8px] border bg-white transition-colors duration-150 overflow-hidden ${
-        isOpen ? "border-[#0070d1]/40" : "border-[#e8eaed] hover:border-[#c8d0da]"
-      }`}
+      className="rounded-[12px] border border-[#e5e7eb] bg-white overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
     >
       <h3>
         <button
           id={headerId}
           onClick={onToggle}
-          className="w-full flex items-center justify-between gap-4 px-6 py-4 text-left hover:bg-[#f5f7fa] transition-colors focus-ring rounded-[8px]"
+          className="w-full flex items-center justify-between gap-4 px-6 py-4 text-left hover:bg-[#f5f5f5] transition-colors focus-ring rounded-[12px]"
           aria-expanded={isOpen}
           aria-controls={panelId}
         >
-          <span className="text-[14px] font-semibold text-[#0a0a0a]">{faq.q}</span>
+          <span className="text-[14px] font-semibold text-[#111111]">{faq.q}</span>
           <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors duration-150 ${
-            isOpen ? "bg-[#0070d1]/10" : "bg-[#f5f7fa]"
+            isOpen ? "bg-[#111111]" : "bg-[#f5f5f5]"
           }`}>
             <ChevronDown
-              className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-180 text-[#0070d1]" : "text-[#6b7280]"}`}
+              className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-180 text-white" : "text-[#6b7280]"}`}
               aria-hidden="true"
             />
           </div>
@@ -96,7 +94,7 @@ function AccordionItem({
           transition: "max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease",
         }}
       >
-        <p className="px-6 pb-5 text-[13px] text-[#6b7280] leading-relaxed border-t border-[#e8eaed] pt-4">
+        <p className="px-6 pb-5 text-[14px] text-[#374151] leading-relaxed border-t border-[#e5e7eb] pt-4">
           {faq.a}
         </p>
       </div>
@@ -108,14 +106,14 @@ export default function FAQSection() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="py-24 md:py-32 bg-[#f5f7fa]">
-      <div className="container mx-auto px-6">
+    <section id="faq" className="py-24 md:py-32 bg-[#f5f5f5]">
+      <div className="container mx-auto px-6 max-w-[1200px]">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <p className="text-[11px] font-semibold text-[#0070d1] mb-3 tracking-widest uppercase">FAQ</p>
-          <h2 className="text-[clamp(1.8rem,4vw,3rem)] font-light tracking-tight text-[#0a0a0a]">
+          <p className="text-[11px] font-semibold text-[#6b7280] mb-3 tracking-widest uppercase">FAQ</p>
+          <h2 className="text-[clamp(1.8rem,4vw,3rem)] font-display font-semibold tracking-[-0.03em] text-[#111111]">
             Questions fréquentes
           </h2>
-          <p className="mt-4 text-[#6b7280] text-[14px]">
+          <p className="mt-4 text-[#374151] text-[14px]">
             Tout ce que vous devez savoir avant de démarrer.
           </p>
         </div>
@@ -136,9 +134,9 @@ export default function FAQSection() {
           <p className="text-[13px] text-[#6b7280] mb-3">Vous ne trouvez pas la réponse à votre question ?</p>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 rounded-full border border-[#e8eaed] bg-white px-5 py-2.5 text-[13px] font-medium text-[#0a0a0a] hover:border-[#0070d1]/40 hover:text-[#0070d1] transition-all focus-ring group"
+            className="inline-flex items-center gap-2 rounded-[8px] border border-[#e5e7eb] bg-white px-5 py-2.5 text-[14px] font-medium text-[#111111] hover:border-[#111111]/20 hover:shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all focus-ring group"
           >
-            <MessageCircle className="w-4 h-4 text-[#6b7280] group-hover:text-[#0070d1] transition-colors" />
+            <MessageCircle className="w-4 h-4 text-[#6b7280] group-hover:text-[#111111] transition-colors" />
             Contacter l&apos;équipe
           </Link>
         </div>

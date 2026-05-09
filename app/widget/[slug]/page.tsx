@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 export const revalidate = 300;
 
 export default async function WidgetPage({ params }: { params: { slug: string } }) {
-  let restaurant = null;
+  // Type explicite : Prisma renvoie un type complexe (Restaurant + relations) ou null,
+  // pas juste null comme l'inférence le pensait.
+  let restaurant: Awaited<ReturnType<typeof prisma.restaurant.findUnique>> | any = null;
   try {
     restaurant = await prisma.restaurant.findUnique({
       where: { slug: params.slug },

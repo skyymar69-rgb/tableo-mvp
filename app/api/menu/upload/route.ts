@@ -1,32 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { analyzeMenu } from "@/lib/anthropic";
+import { analyzeMenu, analyzeMenuFromFile } from "@/lib/anthropic";
 import { prisma } from "@/lib/db";
+import { requireUser } from "@/lib/api-helpers";
+
+
+export const dynamic = "force-dynamic";
+
+/** Strip HTML tags and collapse whitespace for URL-sourced content. */
+function extractTextFromHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 12000);
+}
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const auth = await requireUser();
+  if ("error" in auth) return auth.error;
 
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File | null;
     const restaurantId = formData.get("restaurantId") as string;
-    const text = formData.get("text") as string | null;
+    const sourceType = (formData.get("sourceType") as string | null) ?? "text";
 
     if (!restaurantId) return NextResponse.json({ error: "restaurantId requis" }, { status: 400 });
 
-    let menuContent = text || "";
-    if (file) {
-      menuContent = file.type === "text/plain"
-        ? await file.text()
-        : "Génère un menu restaurant professionnel avec 4 catégories et 3 plats chacune.";
-    }
-    if (!menuContent.trim()) {
-      menuContent = "Génère un menu restaurant français avec 4 catégories (Entrées, Plats, Desserts, Boissons) et 3 plats chacune.";
-    }
+    // Sécurité : vérifier ownership avant tout
+    const owns = await prisma.restaurant.findFirst({
+      where: { id: restaurantId, ownerId: auth.userId },
+      select: { id: true },
+    });
+    if (!owns) return NextResponse.json({ error: "Restaurant introuvable" }, { status: 404 });
 
-    const analysis = await analyzeMenu(menuContent);
+    let analysis;
+
+    if (sourceType === "url") {
+      const url = formData.get("url") as string;
+      if (!url?.startsWith("http")) return NextResponse.json({ error: "URL invalide" }, { status: 400 });
+      const html = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (compatible; Tableo/1.0)" } }).then((r) => r.text());
+      const textContent = extractTextFromHtml(html);
+      if (textContent.length < 20) return NextResponse.json({ error: "Contenu de la page trop court ou inaccessible" }, { status: 400 });
+      analysis = await analyzeMenu(textContent);
+
+    } else if (sourceType === "pdf" || sourceType === "image") {
+      const file = formData.get("file") as File | null;
+      if (!file) return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
+      const arrayBuffer = await file.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString("base64");
+      analysis = await analyzeMenuFromFile(base64, file.type, sourceType);
+
+    } else {
+      // text (default)
+      const text = formData.get("text") as string | null;
+      const file = formData.get("file") as File | null;
+      let menuContent = text || "";
+      if (file?.type === "text/plain") menuContent = await file.text();
+      if (!menuContent.trim()) {
+        menuContent = "Génère un menu restaurant français avec 4 catégories (Entrées, Plats, Desserts, Boissons) et 3 plats chacune.";
+      }
+      analysis = await analyzeMenu(menuContent);
+    }
 
     const menu = await prisma.menu.create({
       data: {
@@ -56,9 +92,14 @@ export async function POST(req: NextRequest) {
       await prisma.restaurant.update({ where: { id: restaurantId }, data: { name: analysis.restaurantName } });
     }
 
-    return NextResponse.json({ menu, analysis });
-  } catch (err) {
+    const totalDishes = menu.categories.reduce((s, c) => s + c.dishes.length, 0);
+    return NextResponse.json({ menu, analysis, totalDishes });
+  } catch (err: any) {
     console.error("[MENU_UPLOAD]", err);
-    return NextResponse.json({ error: "Erreur lors de l'analyse IA" }, { status: 500 });
+    // Si Anthropic n'est pas configuré, on renvoie un message clair
+    const msg = err?.message?.includes("ANTHROPIC_API_KEY")
+      ? "Service IA non configuré (ANTHROPIC_API_KEY manquante)."
+      : "Erreur lors de l'analyse IA";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

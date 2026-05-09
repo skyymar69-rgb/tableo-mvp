@@ -23,27 +23,45 @@ async function getDashboardData(userId: string) {
     prisma.qRScan.count({ where: { qrCode: { restaurantId: restaurant.id }, scannedAt: { gte: today } } }),
   ]);
 
-  const topDishesRaw = await prisma.orderItem.groupBy({
-    by: ["dishId"],
-    where: { order: { restaurantId: restaurant.id, createdAt: { gte: subDays(new Date(), 7) } } },
-    _sum: { quantity: true, unitPrice: true },
-    _count: { dishId: true },
-    orderBy: { _count: { dishId: "desc" } },
-    take: 5,
-  });
+  const sevenDaysAgo = subDays(new Date(), 7);
+  const fourteenDaysAgo = subDays(new Date(), 14);
+
+  const [topDishesRaw, topDishesPrevRaw] = await Promise.all([
+    prisma.orderItem.groupBy({
+      by: ["dishId"],
+      where: { order: { restaurantId: restaurant.id, createdAt: { gte: sevenDaysAgo } } },
+      _sum: { quantity: true, unitPrice: true },
+      _count: { dishId: true },
+      orderBy: { _count: { dishId: "desc" } },
+      take: 5,
+    }),
+    prisma.orderItem.groupBy({
+      by: ["dishId"],
+      where: { order: { restaurantId: restaurant.id, createdAt: { gte: fourteenDaysAgo, lt: sevenDaysAgo } } },
+      _sum: { quantity: true },
+      _count: { dishId: true },
+      orderBy: { _count: { dishId: "desc" } },
+    }),
+  ]);
 
   const dishIds = topDishesRaw.map((d) => d.dishId);
   const dishes = await prisma.dish.findMany({ where: { id: { in: dishIds } }, select: { id: true, name: true, price: true } });
   const dishMap = new Map(dishes.map((d) => [d.id, d]));
+  const prevMap = new Map(topDishesPrevRaw.map((d) => [d.dishId, d._count.dishId]));
 
-  const topDishes = topDishesRaw.map((td) => ({
-    id: td.dishId,
-    name: dishMap.get(td.dishId)?.name ?? "Inconnu",
-    orders: td._count.dishId,
-    revenue: (td._sum.unitPrice ?? 0) * (td._sum.quantity ?? 1),
-    margin: 72,
-    trend: "+5%",
-  }));
+  const topDishes = topDishesRaw.map((td) => {
+    const prev = prevMap.get(td.dishId) ?? 0;
+    const curr = td._count.dishId;
+    const trendPct = prev > 0 ? (((curr - prev) / prev) * 100).toFixed(0) : null;
+    const trend = trendPct !== null ? (Number(trendPct) >= 0 ? `+${trendPct}%` : `${trendPct}%`) : "—";
+    return {
+      id: td.dishId,
+      name: dishMap.get(td.dishId)?.name ?? "Inconnu",
+      orders: curr,
+      revenue: (td._sum.unitPrice ?? 0) * (td._sum.quantity ?? 1),
+      trend,
+    };
+  });
 
   const weekData = await prisma.analytics.findMany({
     where: { restaurantId: restaurant.id, date: { gte: subDays(new Date(), 7) } },
@@ -76,22 +94,10 @@ async function getDashboardData(userId: string) {
       scansToday,
       avgOrder,
     },
-    topDishes: topDishes.length > 0 ? topDishes : [
-      { id: "1", name: "Saumon Mi-Cuit", orders: 38, revenue: 912, margin: 72, trend: "+5%" },
-      { id: "2", name: "Fondant Chocolat", orders: 34, revenue: 476, margin: 85, trend: "+12%" },
-      { id: "3", name: "Risotto Truffe", orders: 29, revenue: 812, margin: 68, trend: "+3%" },
-      { id: "4", name: "Gin Artisanal", orders: 27, revenue: 324, margin: 90, trend: "+18%" },
-      { id: "5", name: "Tartare Boeuf", orders: 24, revenue: 552, margin: 65, trend: "-2%" },
-    ],
-    tables: restaurant.tables.length > 0 ? restaurant.tables : Array.from({ length: 8 }, (_, i) => ({
-      id: `t${i + 1}`, number: `T${i + 1}`, status: i % 3 === 2 ? "IDLE" : "OCCUPIED", capacity: 4
-    })),
-    chartData: chartData.length > 0 ? chartData : Array.from({ length: 7 }, (_, i) => ({
-      date: format(subDays(new Date(), 6 - i), "EEE"),
-      revenue: 2000 + Math.random() * 3000,
-      orders: 60 + Math.random() * 80,
-      scans: 150 + Math.random() * 200,
-    })),
+    // Vraies données uniquement — états vides explicites pour un rendu honnête
+    topDishes,
+    tables: restaurant.tables,
+    chartData,
     activeTables,
     totalTables,
   };

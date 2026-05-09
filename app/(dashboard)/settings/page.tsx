@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Settings, Store, Palette, Bell, CreditCard, Globe, Save, Loader2, Upload, Check, ChevronRight, Shield, Zap } from "lucide-react";
+import { Store, Palette, Bell, CreditCard, Save, Loader2, Upload, Check, Shield, Zap, FileText } from "lucide-react";
+import Link from "next/link";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
@@ -20,18 +22,27 @@ const TIMEZONES = ["Europe/Paris", "Europe/London", "America/New_York", "America
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("restaurant");
   const [saving, setSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const { data: restaurant } = useRestaurant();
 
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) { e.preventDefault(); e.returnValue = ""; }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
   const [restaurantForm, setRestaurantForm] = useState({
-    name: "Le Petit Bistro",
-    description: "Restaurant gastronomique français au cœur de Paris",
-    address: "12 Rue de la Paix, 75001 Paris",
-    phone: "+33 1 42 00 00 00",
-    email: "contact@lepetitbistro.fr",
-    website: "www.lepetitbistro.fr",
+    name: "",
+    description: "",
+    address: "",
+    phone: "",
+    email: "",
+    website: "",
     currency: "EUR",
     timezone: "Europe/Paris",
-    openingHours: "12:00 - 14:30 | 19:00 - 22:30",
+    openingHours: "",
   });
 
   useEffect(() => {
@@ -39,11 +50,14 @@ export default function SettingsPage() {
       setRestaurantForm((p) => ({
         ...p,
         name: restaurant.name ?? p.name,
+        description: (restaurant as any).description ?? p.description,
         address: restaurant.address ?? p.address,
         phone: restaurant.phone ?? p.phone,
         email: restaurant.email ?? p.email,
+        website: (restaurant as any).website ?? p.website,
         currency: restaurant.currency ?? p.currency,
         timezone: restaurant.timezone ?? p.timezone,
+        openingHours: (restaurant as any).openingHours ?? p.openingHours,
       }));
       if (restaurant.settings) {
         setAppearanceForm((p) => ({
@@ -78,7 +92,11 @@ export default function SettingsPage() {
   });
 
   const save = async () => {
+    if (!restaurantForm.name.trim()) { toast.error("Le nom du restaurant est requis"); return; }
+    if (restaurantForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(restaurantForm.email)) { toast.error("Email invalide"); return; }
+    if (restaurantForm.website && !/^https?:\/\/.+/.test(restaurantForm.website)) { toast.error("URL invalide (doit commencer par http:// ou https://)"); return; }
     setSaving(true);
+    setIsDirty(false);
     try {
       if (restaurant?.id) {
         const payload: Record<string, any> = {
@@ -90,6 +108,7 @@ export default function SettingsPage() {
           website: restaurantForm.website,
           currency: restaurantForm.currency,
           timezone: restaurantForm.timezone,
+          openingHours: restaurantForm.openingHours,  // B4 : ajout du champ qui était perdu
           primaryColor: appearanceForm.primaryColor,
           accentColor: appearanceForm.accentColor,
           settings: {
@@ -99,7 +118,7 @@ export default function SettingsPage() {
             showCalories: appearanceForm.showCalories,
           },
         };
-        if (appearanceForm.logo) payload.logo = appearanceForm.logo;
+        if (appearanceForm.logo) payload.logoUrl = appearanceForm.logo;
         const res = await fetch(`/api/restaurant/${restaurant.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -117,20 +136,24 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-12">
-      <div className="sticky top-0 z-10 glass border-b border-border/40 px-6 h-16 flex items-center justify-between">
-        <div>
-          <h1 className="text-base font-bold text-foreground">Paramètres</h1>
-          <p className="text-xs text-muted-foreground">Configurez votre restaurant</p>
-        </div>
-        <button
-          onClick={save}
-          disabled={saving}
-          className="flex items-center gap-2 rounded-lg bg-gradient-warm px-4 py-2 text-xs font-semibold text-primary-foreground shadow-warm hover:scale-[1.02] transition-all disabled:opacity-50"
-        >
-          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-          {saving ? "Sauvegarde..." : "Sauvegarder"}
-        </button>
-      </div>
+      {/* #33 — dirty-dot sur le titre si modifications non sauvegardées */}
+      <PageHeader
+        title={
+          <span className={isDirty ? "dirty-dot" : ""}>Paramètres</span>
+        }
+        subtitle="Configurez votre restaurant"
+        actions={
+          <button
+            onClick={save}
+            disabled={saving}
+            aria-label={isDirty ? "Sauvegarder les modifications" : "Paramètres déjà à jour"}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold shadow-warm hover:scale-[1.02] transition-all disabled:opacity-50 ${isDirty ? "bg-gradient-warm text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}
+          >
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <Save className="w-3.5 h-3.5" aria-hidden="true" />}
+            {saving ? "Sauvegarde..." : isDirty ? "Sauvegarder *" : "Sauvegarder"}
+          </button>
+        }
+      />
 
       <div className="p-6 grid lg:grid-cols-4 gap-6 max-w-6xl">
         {/* Tab nav */}
@@ -217,7 +240,7 @@ export default function SettingsPage() {
                         id={`setting-${field.key}`}
                         type={field.type}
                         value={(restaurantForm as Record<string, string>)[field.key]}
-                        onChange={(e) => setRestaurantForm((p) => ({ ...p, [field.key]: e.target.value }))}
+                        onChange={(e) => { setRestaurantForm((p) => ({ ...p, [field.key]: e.target.value })); setIsDirty(true); }}
                         className="w-full rounded-xl bg-secondary border border-border px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors focus-ring"
                       />
                     </div>
@@ -262,12 +285,12 @@ export default function SettingsPage() {
                       <div className="flex items-center gap-3">
                         <input
                           type="color"
-                          value={(appearanceForm as Record<string, string>)[field.key]}
+                          value={(appearanceForm as Record<string, unknown>)[field.key] as string}
                           onChange={(e) => setAppearanceForm((p) => ({ ...p, [field.key]: e.target.value }))}
                           className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-secondary"
                         />
                         <input
-                          value={(appearanceForm as Record<string, string>)[field.key]}
+                          value={(appearanceForm as Record<string, unknown>)[field.key] as string}
                           onChange={(e) => setAppearanceForm((p) => ({ ...p, [field.key]: e.target.value }))}
                           className="flex-1 rounded-xl bg-secondary border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 font-mono"
                         />
@@ -476,6 +499,37 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Notice technique */}
+              <div className="rounded-2xl border border-border bg-gradient-card p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Notice Technique</p>
+                      <p className="text-xs text-muted-foreground">Architecture, sécurité et conformité RGPD</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href="/docs/notice"
+                      className="text-xs px-3 py-1.5 rounded-lg border border-border bg-secondary hover:bg-secondary/80 text-foreground transition-colors font-medium"
+                    >
+                      Consulter
+                    </Link>
+                    <a
+                      href="/api/docs/notice"
+                      download="tableo-notice-technique.html"
+                      className="text-xs px-3 py-1.5 rounded-lg text-white font-semibold transition-all hover:scale-[1.02]"
+                      style={{ background: "linear-gradient(135deg, hsl(var(--warm-start)), hsl(var(--warm-mid)), hsl(var(--warm-end)))" }}
+                    >
+                      Télécharger
+                    </a>
+                  </div>
                 </div>
               </div>
             </>

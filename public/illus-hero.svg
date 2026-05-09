@@ -2,48 +2,48 @@
   <defs>
     <!-- Brand gradient : navy → indigo → purple -->
     <linearGradient id="bg" x1="0" y1="0" x2="960" y2="580" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#04091a"/>
-      <stop offset="100%" stop-color="#07091e"/>
+      <stop offset="0%"   stop-color="#00081a"/>
+      <stop offset="100%" stop-color="#00091c"/>
     </linearGradient>
     <!-- Primary brand warm gradient -->
     <linearGradient id="brand1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%"   stop-color="#001e40"/>
-      <stop offset="50%"  stop-color="#1603ae"/>
-      <stop offset="100%" stop-color="#844981"/>
+      <stop offset="0%"   stop-color="#004a8f"/>
+      <stop offset="50%"  stop-color="#0070d1"/>
+      <stop offset="100%" stop-color="#0082f0"/>
     </linearGradient>
     <linearGradient id="brand2" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%"   stop-color="#001e40"/>
-      <stop offset="100%" stop-color="#844981"/>
+      <stop offset="0%"   stop-color="#004a8f"/>
+      <stop offset="100%" stop-color="#0082f0"/>
     </linearGradient>
     <linearGradient id="brand3" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%"   stop-color="#1603ae"/>
-      <stop offset="100%" stop-color="#844981"/>
+      <stop offset="0%"   stop-color="#0070d1"/>
+      <stop offset="100%" stop-color="#0082f0"/>
     </linearGradient>
     <!-- Phone / POS surfaces -->
     <linearGradient id="phoneBody" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%"   stop-color="#0e1530"/>
-      <stop offset="100%" stop-color="#080d20"/>
+      <stop offset="0%"   stop-color="#001228"/>
+      <stop offset="100%" stop-color="#000b1e"/>
     </linearGradient>
     <linearGradient id="screen" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%"   stop-color="#04091a"/>
-      <stop offset="100%" stop-color="#060c22"/>
+      <stop offset="0%"   stop-color="#00081a"/>
+      <stop offset="100%" stop-color="#00091e"/>
     </linearGradient>
     <linearGradient id="posBody" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%"   stop-color="#0c1435"/>
+      <stop offset="0%"   stop-color="#000e2a"/>
       <stop offset="100%" stop-color="#070c20"/>
     </linearGradient>
     <!-- Ambient glows -->
     <radialGradient id="glow1" cx="50%" cy="50%" r="50%">
-      <stop offset="0%"   stop-color="#1603ae" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#1603ae" stop-opacity="0"/>
+      <stop offset="0%"   stop-color="#0070d1" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#0070d1" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="glow2" cx="50%" cy="50%" r="50%">
-      <stop offset="0%"   stop-color="#844981" stop-opacity="0.16"/>
-      <stop offset="100%" stop-color="#844981" stop-opacity="0"/>
+      <stop offset="0%"   stop-color="#0082f0" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#0082f0" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="glow3" cx="50%" cy="50%" r="50%">
-      <stop offset="0%"   stop-color="#001e40" stop-opacity="0.20"/>
-      <stop offset="100%" stop-color="#001e40" stop-opacity="0"/>
+      <stop offset="0%"   stop-color="#004a8f" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#004a8f" stop-opacity="0"/>
     </radialGradient>
     <!-- Filters -->
     <filter id="blur8" ><feGaussianBlur stdDeviation="8"/></filter>
@@ -63,7 +63,7 @@
   <ellipse cx="160" cy="430" rx="170" ry="130" fill="url(#glow3)" filter="url(#blur40)"/>
 
   <!-- Subtle grid -->
-  <g stroke="#16205e" stroke-width="0.4" opacity="0.30">
+  <g stroke="#003a7a" stroke-width="0.4" opacity="0.30">
     <line x1="0" y1="96"  x2="960" y2="96"/> <line x1="0" y1="192" x2="960" y2="192"/>
     <line x1="0" y1="288" x2="960" y2="288"/> <line x1="0" y1="384" x2="960" y2="384"/>
     <line x1="0" y1="480" x2="960" y2="480"/>
@@ -79,12 +79,12 @@
   ══════════════════════════════════════════ -->
   <!-- Table -->
   <ellipse cx="125" cy="485" rx="98" ry="18" fill="#02040e"/>
-  <ellipse cx="125" cy="480" rx="90" ry="14" fill="#07091e" stroke="#16205e" stroke-width="1"/>
+  <ellipse cx="125" cy="480" rx="90" ry="14" fill="#00091c" stroke="#003a7a" stroke-width="1"/>
   <rect x="116" y="420" width="18" height="62" rx="4" fill="#05081a"/>
   <ellipse cx="125" cy="423" rx="58" ry="7" fill="#000" fill-opacity="0.45" filter="url(#blur8)"/>
 
   <!-- Card body -->
-  <rect x="65" y="100" width="120" height="322" rx="12" fill="#09102a" stroke="#1a2560" stroke-width="1.5"/>
+  <rect x="65" y="100" width="120" height="322" rx="12" fill="#000c22" stroke="#1a2560" stroke-width="1.5"/>
   <!-- Card header brand gradient -->
   <rect x="65" y="100" width="120" height="60" rx="12" fill="url(#brand1)"/>
   <rect x="65" y="140" width="120" height="20" fill="url(#brand1)"/>
@@ -94,72 +94,72 @@
 
   <!-- QR Code — couleurs brand -->
   <g transform="translate(76,170)">
-    <rect width="98" height="98" rx="5" fill="#04091a" stroke="#844981" stroke-width="1.5"/>
+    <rect width="98" height="98" rx="5" fill="#00081a" stroke="#0082f0" stroke-width="1.5"/>
     <!-- TL marker -->
-    <rect x="7"  y="7"  width="24" height="24" rx="3" fill="none" stroke="#1603ae" stroke-width="2"/>
+    <rect x="7"  y="7"  width="24" height="24" rx="3" fill="none" stroke="#0070d1" stroke-width="2"/>
     <rect x="11" y="11" width="16" height="16" rx="1.5" fill="url(#brand3)"/>
     <!-- TR marker -->
-    <rect x="67" y="7"  width="24" height="24" rx="3" fill="none" stroke="#1603ae" stroke-width="2"/>
+    <rect x="67" y="7"  width="24" height="24" rx="3" fill="none" stroke="#0070d1" stroke-width="2"/>
     <rect x="71" y="11" width="16" height="16" rx="1.5" fill="url(#brand3)"/>
     <!-- BL marker -->
-    <rect x="7"  y="67" width="24" height="24" rx="3" fill="none" stroke="#1603ae" stroke-width="2"/>
+    <rect x="7"  y="67" width="24" height="24" rx="3" fill="none" stroke="#0070d1" stroke-width="2"/>
     <rect x="11" y="71" width="16" height="16" rx="1.5" fill="url(#brand3)"/>
     <!-- Data cells -->
-    <rect x="37" y="7"  width="5" height="5" fill="#844981"/>
-    <rect x="44" y="7"  width="5" height="5" fill="#1603ae"/>
-    <rect x="51" y="7"  width="5" height="5" fill="#844981"/>
-    <rect x="58" y="7"  width="5" height="5" fill="#1603ae"/>
-    <rect x="37" y="14" width="5" height="5" fill="#1603ae"/>
-    <rect x="51" y="14" width="5" height="5" fill="#844981"/>
-    <rect x="37" y="21" width="5" height="5" fill="#844981"/>
-    <rect x="44" y="21" width="5" height="5" fill="#1603ae"/>
-    <rect x="58" y="21" width="5" height="5" fill="#844981"/>
-    <rect x="37" y="28" width="5" height="5" fill="#1603ae"/>
-    <rect x="51" y="28" width="5" height="5" fill="#844981"/>
-    <rect x="7"  y="37" width="5" height="5" fill="#1603ae"/>
-    <rect x="14" y="37" width="5" height="5" fill="#844981"/>
-    <rect x="24" y="37" width="5" height="5" fill="#1603ae"/>
-    <rect x="37" y="37" width="5" height="5" fill="#844981"/>
-    <rect x="44" y="37" width="5" height="5" fill="#1603ae"/>
-    <rect x="51" y="37" width="5" height="5" fill="#844981"/>
-    <rect x="58" y="37" width="5" height="5" fill="#1603ae"/>
-    <rect x="67" y="37" width="5" height="5" fill="#844981"/>
-    <rect x="74" y="37" width="5" height="5" fill="#1603ae"/>
-    <rect x="86" y="37" width="5" height="5" fill="#844981"/>
-    <rect x="7"  y="44" width="5" height="5" fill="#1603ae"/>
-    <rect x="21" y="44" width="5" height="5" fill="#844981"/>
-    <rect x="37" y="44" width="5" height="5" fill="#1603ae"/>
-    <rect x="51" y="44" width="5" height="5" fill="#844981"/>
-    <rect x="67" y="44" width="5" height="5" fill="#1603ae"/>
-    <rect x="81" y="44" width="5" height="5" fill="#844981"/>
-    <rect x="7"  y="51" width="5" height="5" fill="#844981"/>
-    <rect x="14" y="51" width="5" height="5" fill="#1603ae"/>
-    <rect x="24" y="51" width="5" height="5" fill="#844981"/>
-    <rect x="37" y="51" width="5" height="5" fill="#1603ae"/>
-    <rect x="44" y="51" width="5" height="5" fill="#844981"/>
-    <rect x="58" y="51" width="5" height="5" fill="#1603ae"/>
-    <rect x="74" y="51" width="5" height="5" fill="#844981"/>
-    <rect x="86" y="51" width="5" height="5" fill="#1603ae"/>
-    <rect x="37" y="58" width="5" height="5" fill="#844981"/>
-    <rect x="44" y="58" width="5" height="5" fill="#1603ae"/>
-    <rect x="58" y="58" width="5" height="5" fill="#844981"/>
-    <rect x="67" y="58" width="5" height="5" fill="#1603ae"/>
-    <rect x="81" y="58" width="5" height="5" fill="#844981"/>
-    <rect x="37" y="65" width="5" height="5" fill="#1603ae"/>
-    <rect x="51" y="65" width="5" height="5" fill="#844981"/>
-    <rect x="67" y="65" width="5" height="5" fill="#1603ae"/>
-    <rect x="44" y="72" width="5" height="5" fill="#844981"/>
-    <rect x="58" y="72" width="5" height="5" fill="#1603ae"/>
-    <rect x="74" y="72" width="5" height="5" fill="#844981"/>
-    <rect x="86" y="72" width="5" height="5" fill="#1603ae"/>
-    <rect x="37" y="79" width="5" height="5" fill="#844981"/>
-    <rect x="51" y="79" width="5" height="5" fill="#1603ae"/>
-    <rect x="67" y="79" width="5" height="5" fill="#844981"/>
-    <rect x="81" y="79" width="5" height="5" fill="#1603ae"/>
-    <rect x="37" y="86" width="5" height="5" fill="#844981"/>
-    <rect x="44" y="86" width="5" height="5" fill="#1603ae"/>
-    <rect x="58" y="86" width="5" height="5" fill="#844981"/>
-    <rect x="74" y="86" width="5" height="5" fill="#1603ae"/>
+    <rect x="37" y="7"  width="5" height="5" fill="#0082f0"/>
+    <rect x="44" y="7"  width="5" height="5" fill="#0070d1"/>
+    <rect x="51" y="7"  width="5" height="5" fill="#0082f0"/>
+    <rect x="58" y="7"  width="5" height="5" fill="#0070d1"/>
+    <rect x="37" y="14" width="5" height="5" fill="#0070d1"/>
+    <rect x="51" y="14" width="5" height="5" fill="#0082f0"/>
+    <rect x="37" y="21" width="5" height="5" fill="#0082f0"/>
+    <rect x="44" y="21" width="5" height="5" fill="#0070d1"/>
+    <rect x="58" y="21" width="5" height="5" fill="#0082f0"/>
+    <rect x="37" y="28" width="5" height="5" fill="#0070d1"/>
+    <rect x="51" y="28" width="5" height="5" fill="#0082f0"/>
+    <rect x="7"  y="37" width="5" height="5" fill="#0070d1"/>
+    <rect x="14" y="37" width="5" height="5" fill="#0082f0"/>
+    <rect x="24" y="37" width="5" height="5" fill="#0070d1"/>
+    <rect x="37" y="37" width="5" height="5" fill="#0082f0"/>
+    <rect x="44" y="37" width="5" height="5" fill="#0070d1"/>
+    <rect x="51" y="37" width="5" height="5" fill="#0082f0"/>
+    <rect x="58" y="37" width="5" height="5" fill="#0070d1"/>
+    <rect x="67" y="37" width="5" height="5" fill="#0082f0"/>
+    <rect x="74" y="37" width="5" height="5" fill="#0070d1"/>
+    <rect x="86" y="37" width="5" height="5" fill="#0082f0"/>
+    <rect x="7"  y="44" width="5" height="5" fill="#0070d1"/>
+    <rect x="21" y="44" width="5" height="5" fill="#0082f0"/>
+    <rect x="37" y="44" width="5" height="5" fill="#0070d1"/>
+    <rect x="51" y="44" width="5" height="5" fill="#0082f0"/>
+    <rect x="67" y="44" width="5" height="5" fill="#0070d1"/>
+    <rect x="81" y="44" width="5" height="5" fill="#0082f0"/>
+    <rect x="7"  y="51" width="5" height="5" fill="#0082f0"/>
+    <rect x="14" y="51" width="5" height="5" fill="#0070d1"/>
+    <rect x="24" y="51" width="5" height="5" fill="#0082f0"/>
+    <rect x="37" y="51" width="5" height="5" fill="#0070d1"/>
+    <rect x="44" y="51" width="5" height="5" fill="#0082f0"/>
+    <rect x="58" y="51" width="5" height="5" fill="#0070d1"/>
+    <rect x="74" y="51" width="5" height="5" fill="#0082f0"/>
+    <rect x="86" y="51" width="5" height="5" fill="#0070d1"/>
+    <rect x="37" y="58" width="5" height="5" fill="#0082f0"/>
+    <rect x="44" y="58" width="5" height="5" fill="#0070d1"/>
+    <rect x="58" y="58" width="5" height="5" fill="#0082f0"/>
+    <rect x="67" y="58" width="5" height="5" fill="#0070d1"/>
+    <rect x="81" y="58" width="5" height="5" fill="#0082f0"/>
+    <rect x="37" y="65" width="5" height="5" fill="#0070d1"/>
+    <rect x="51" y="65" width="5" height="5" fill="#0082f0"/>
+    <rect x="67" y="65" width="5" height="5" fill="#0070d1"/>
+    <rect x="44" y="72" width="5" height="5" fill="#0082f0"/>
+    <rect x="58" y="72" width="5" height="5" fill="#0070d1"/>
+    <rect x="74" y="72" width="5" height="5" fill="#0082f0"/>
+    <rect x="86" y="72" width="5" height="5" fill="#0070d1"/>
+    <rect x="37" y="79" width="5" height="5" fill="#0082f0"/>
+    <rect x="51" y="79" width="5" height="5" fill="#0070d1"/>
+    <rect x="67" y="79" width="5" height="5" fill="#0082f0"/>
+    <rect x="81" y="79" width="5" height="5" fill="#0070d1"/>
+    <rect x="37" y="86" width="5" height="5" fill="#0082f0"/>
+    <rect x="44" y="86" width="5" height="5" fill="#0070d1"/>
+    <rect x="58" y="86" width="5" height="5" fill="#0082f0"/>
+    <rect x="74" y="86" width="5" height="5" fill="#0070d1"/>
     <!-- Scan line brand -->
     <rect x="0" y="46" width="98" height="2" fill="url(#brand2)" fill-opacity="0.55" rx="1"/>
   </g>
@@ -173,10 +173,10 @@
        SMARTPHONE (center)
   ══════════════════════════════════════════ -->
   <!-- Glow -->
-  <rect x="278" y="42" width="234" height="466" rx="36" fill="#1603ae" fill-opacity="0.12" filter="url(#blur20)"/>
+  <rect x="278" y="42" width="234" height="466" rx="36" fill="#0070d1" fill-opacity="0.12" filter="url(#blur20)"/>
   <!-- Body -->
-  <rect x="290" y="55" width="210" height="440" rx="30" fill="url(#phoneBody)" stroke="#1a2568" stroke-width="1.5"/>
-  <rect x="294" y="59" width="202" height="432" rx="27" fill="none" stroke="#131c52" stroke-width="0.5"/>
+  <rect x="290" y="55" width="210" height="440" rx="30" fill="url(#phoneBody)" stroke="#003080" stroke-width="1.5"/>
+  <rect x="294" y="59" width="202" height="432" rx="27" fill="none" stroke="#002d6b" stroke-width="0.5"/>
   <!-- Dynamic island -->
   <rect x="355" y="68" width="80" height="20" rx="10" fill="#03060f"/>
   <circle cx="410" cy="78" r="4.5" fill="#06091e" fill-opacity="0.8"/>
@@ -206,23 +206,23 @@
     <text x="395" y="153" text-anchor="middle" fill="rgba(255,255,255,0.68)" font-family="system-ui,sans-serif" font-size="9">Table 7 · Menu du soir</text>
 
     <!-- QR success banner -->
-    <rect x="298" y="174" width="194" height="30" rx="9" fill="#080d20" stroke="#1a2870" stroke-width="1"/>
-    <circle cx="312" cy="189" r="9" fill="#1603ae"/>
+    <rect x="298" y="174" width="194" height="30" rx="9" fill="#000b1e" stroke="#003285" stroke-width="1"/>
+    <circle cx="312" cy="189" r="9" fill="#0070d1"/>
     <text x="313" y="193" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="10" font-weight="700">✓</text>
-    <text x="402" y="185" text-anchor="middle" fill="#a5b4fc" font-family="system-ui,sans-serif" font-size="8.5" font-weight="600">QR scanné · Menu chargé</text>
+    <text x="402" y="185" text-anchor="middle" fill="#7ec8f0" font-family="system-ui,sans-serif" font-size="8.5" font-weight="600">QR scanné · Menu chargé</text>
     <text x="402" y="198" text-anchor="middle" fill="rgba(165,180,252,0.5)" font-family="system-ui,sans-serif" font-size="7.5">0,3 s · Table reconnue</text>
 
     <!-- Category tabs -->
     <rect x="298" y="211" width="56" height="22" rx="11" fill="url(#brand1)"/>
     <text x="326" y="226" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="8.5" font-weight="600">Plats</text>
-    <rect x="360" y="211" width="56" height="22" rx="11" fill="#0c1438"/>
+    <rect x="360" y="211" width="56" height="22" rx="11" fill="#000e28"/>
     <text x="388" y="226" text-anchor="middle" fill="rgba(255,255,255,0.40)" font-family="system-ui,sans-serif" font-size="8.5">Entrées</text>
-    <rect x="422" y="211" width="62" height="22" rx="11" fill="#0c1438"/>
+    <rect x="422" y="211" width="62" height="22" rx="11" fill="#000e28"/>
     <text x="453" y="226" text-anchor="middle" fill="rgba(255,255,255,0.40)" font-family="system-ui,sans-serif" font-size="8.5">Desserts</text>
 
     <!-- Item 1 -->
-    <rect x="298" y="240" width="194" height="62" rx="11" fill="#080e28" stroke="#131c50" stroke-width="0.8"/>
-    <rect x="306" y="248" width="46"  height="46" rx="9" fill="#0e1638"/>
+    <rect x="298" y="240" width="194" height="62" rx="11" fill="#000b20" stroke="#131c50" stroke-width="0.8"/>
+    <rect x="306" y="248" width="46"  height="46" rx="9" fill="#001430"/>
     <text x="329" y="278" text-anchor="middle" font-size="22">🍣</text>
     <text x="362" y="259" fill="rgba(255,255,255,0.90)" font-family="system-ui,sans-serif" font-size="9.5" font-weight="600">Saumon Mi-Cuit</text>
     <text x="362" y="272" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif" font-size="8">Micro-pousses, crème citronnée</text>
@@ -233,25 +233,25 @@
     <text x="474" y="285" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="14" font-weight="300">+</text>
 
     <!-- Item 2 -->
-    <rect x="298" y="308" width="194" height="62" rx="11" fill="#080e28" stroke="#131c50" stroke-width="0.8"/>
-    <rect x="306" y="316" width="46"  height="46" rx="9" fill="#0e1638"/>
+    <rect x="298" y="308" width="194" height="62" rx="11" fill="#000b20" stroke="#131c50" stroke-width="0.8"/>
+    <rect x="306" y="316" width="46"  height="46" rx="9" fill="#001430"/>
     <text x="329" y="346" text-anchor="middle" font-size="22">🥩</text>
     <text x="362" y="327" fill="rgba(255,255,255,0.90)" font-family="system-ui,sans-serif" font-size="9.5" font-weight="600">Entrecôte Black Angus</text>
     <text x="362" y="340" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif" font-size="8">Sauce béarnaise, frites maison</text>
-    <rect x="362" y="345" width="44" height="14" rx="7" fill="#0d1230" stroke="#844981" stroke-width="0.8"/>
-    <text x="384" y="355" text-anchor="middle" fill="#c4b5fd" font-family="system-ui,sans-serif" font-size="7.5" font-weight="600">Upsell IA</text>
+    <rect x="362" y="345" width="44" height="14" rx="7" fill="#001840" stroke="#0082f0" stroke-width="0.8"/>
+    <text x="384" y="355" text-anchor="middle" fill="#a0d4f8" font-family="system-ui,sans-serif" font-size="7.5" font-weight="600">Upsell IA</text>
     <text x="476" y="327" text-anchor="end" fill="white" font-family="system-ui,sans-serif" font-size="11" font-weight="700">34 €</text>
     <circle cx="474" cy="349" r="10" fill="url(#brand1)"/>
     <text x="474" y="353" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="14" font-weight="300">+</text>
 
     <!-- AI Reco -->
-    <rect x="298" y="377" width="194" height="36" rx="9" fill="#060c22" stroke="#16236e" stroke-width="0.8"/>
-    <text x="308" y="391" fill="#a5b4fc" font-family="system-ui,sans-serif" font-size="8.5" font-weight="600">✦ IA recommande pour vous</text>
+    <rect x="298" y="377" width="194" height="36" rx="9" fill="#00091e" stroke="#002e72" stroke-width="0.8"/>
+    <text x="308" y="391" fill="#7ec8f0" font-family="system-ui,sans-serif" font-size="8.5" font-weight="600">✦ IA recommande pour vous</text>
     <text x="308" y="405" fill="rgba(255,255,255,0.35)" font-family="system-ui,sans-serif" font-size="7.5">Fondant chocolat · +28% panier moyen</text>
 
     <!-- Cart bar -->
     <rect x="290" y="443" width="210" height="52" fill="#03060f"/>
-    <line x1="290" y1="443" x2="500" y2="443" stroke="#131c52" stroke-width="0.8"/>
+    <line x1="290" y1="443" x2="500" y2="443" stroke="#002d6b" stroke-width="0.8"/>
     <text x="304" y="459" fill="rgba(255,255,255,0.40)" font-family="system-ui,sans-serif" font-size="8.5">Votre commande</text>
     <text x="304" y="476" fill="white" font-family="system-ui,sans-serif" font-size="10.5" font-weight="700">58 € · 2 articles</text>
     <rect x="418" y="449" width="72" height="30" rx="9" fill="url(#brand1)"/>
@@ -264,17 +264,17 @@
   <!-- ══════════════════════════════════════════
        POS TERMINAL (right)
   ══════════════════════════════════════════ -->
-  <rect x="542" y="132" width="306" height="220" rx="18" fill="#1603ae" fill-opacity="0.09" filter="url(#blur20)"/>
+  <rect x="542" y="132" width="306" height="220" rx="18" fill="#0070d1" fill-opacity="0.09" filter="url(#blur20)"/>
 
   <!-- Stand -->
   <ellipse cx="700" cy="476" rx="78" ry="13" fill="#02040c"/>
-  <ellipse cx="700" cy="470" rx="66" ry="10" fill="#07091e" stroke="#131c50" stroke-width="1"/>
-  <rect x="686" y="348" width="28" height="124" rx="6" fill="#08102a" stroke="#131c50" stroke-width="0.8"/>
-  <rect x="678" y="344" width="44" height="18" rx="6" fill="#0c1640"/>
+  <ellipse cx="700" cy="470" rx="66" ry="10" fill="#00091c" stroke="#131c50" stroke-width="1"/>
+  <rect x="686" y="348" width="28" height="124" rx="6" fill="#000c22" stroke="#131c50" stroke-width="0.8"/>
+  <rect x="678" y="344" width="44" height="18" rx="6" fill="#001435"/>
 
   <!-- POS body -->
-  <rect x="555" y="145" width="280" height="195" rx="14" fill="url(#posBody)" stroke="#1a2568" stroke-width="1.5"/>
-  <rect x="559" y="149" width="272" height="187" rx="12" fill="none" stroke="#131c52" stroke-width="0.5"/>
+  <rect x="555" y="145" width="280" height="195" rx="14" fill="url(#posBody)" stroke="#003080" stroke-width="1.5"/>
+  <rect x="559" y="149" width="272" height="187" rx="12" fill="none" stroke="#002d6b" stroke-width="0.5"/>
 
   <!-- POS screen -->
   <rect x="563" y="153" width="264" height="179" rx="10" fill="#03060f"/>
@@ -284,47 +284,47 @@
 
   <text x="575" y="211" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif" font-size="8.5">Commande #2 847</text>
 
-  <rect x="569" y="218" width="252" height="20" rx="5" fill="#080e28"/>
+  <rect x="569" y="218" width="252" height="20" rx="5" fill="#000b20"/>
   <text x="579" y="232" fill="rgba(255,255,255,0.80)" font-family="system-ui,sans-serif" font-size="9">1 × Saumon Mi-Cuit</text>
   <text x="811" y="232" text-anchor="end" fill="white" font-family="system-ui,sans-serif" font-size="9" font-weight="600">24,00 €</text>
 
-  <rect x="569" y="241" width="252" height="20" rx="5" fill="#080e28"/>
+  <rect x="569" y="241" width="252" height="20" rx="5" fill="#000b20"/>
   <text x="579" y="255" fill="rgba(255,255,255,0.80)" font-family="system-ui,sans-serif" font-size="9">1 × Entrecôte Black Angus</text>
   <text x="811" y="255" text-anchor="end" fill="white" font-family="system-ui,sans-serif" font-size="9" font-weight="600">34,00 €</text>
 
-  <line x1="569" y1="267" x2="820" y2="267" stroke="#131c52" stroke-width="0.8"/>
+  <line x1="569" y1="267" x2="820" y2="267" stroke="#002d6b" stroke-width="0.8"/>
 
   <text x="579" y="283" fill="rgba(255,255,255,0.40)" font-family="system-ui,sans-serif" font-size="8.5">Total TTC</text>
   <text x="811" y="283" text-anchor="end" fill="white" font-family="system-ui,sans-serif" font-size="14" font-weight="700">58,00 €</text>
 
   <!-- Buttons -->
-  <rect x="569" y="293" width="120" height="28" rx="7" fill="#06101e" stroke="#844981" stroke-width="1"/>
-  <text x="629" y="311" text-anchor="middle" fill="#c4b5fd" font-family="system-ui,sans-serif" font-size="9" font-weight="600">✓ Payé sur mobile</text>
+  <rect x="569" y="293" width="120" height="28" rx="7" fill="#001228" stroke="#0082f0" stroke-width="1"/>
+  <text x="629" y="311" text-anchor="middle" fill="#a0d4f8" font-family="system-ui,sans-serif" font-size="9" font-weight="600">✓ Payé sur mobile</text>
 
   <rect x="697" y="293" width="124" height="28" rx="7" fill="url(#brand1)"/>
   <text x="759" y="311" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="9" font-weight="600">Clôturer table →</text>
 
   <!-- NFC reader disc -->
-  <circle cx="848" cy="240" r="22" fill="#06091e" stroke="#844981" stroke-width="1.5"/>
-  <path d="M839,228 Q848,218 857,228" stroke="#1603ae" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-  <path d="M841,234 Q848,226 855,234" stroke="#844981" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-  <path d="M843,240 Q848,234 853,240" stroke="#1603ae" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <circle cx="848" cy="240" r="22" fill="#06091e" stroke="#0082f0" stroke-width="1.5"/>
+  <path d="M839,228 Q848,218 857,228" stroke="#0070d1" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M841,234 Q848,226 855,234" stroke="#0082f0" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M843,240 Q848,234 853,240" stroke="#0070d1" stroke-width="1.8" fill="none" stroke-linecap="round"/>
   <circle cx="848" cy="245" r="3" fill="url(#brand3)"/>
   <text x="848" y="268" text-anchor="middle" fill="rgba(255,255,255,0.30)" font-family="system-ui,sans-serif" font-size="7">Tap to pay</text>
 
   <!-- Card slot -->
-  <rect x="833" y="270" width="8" height="46" rx="4" fill="#0c1640" stroke="#1a2568" stroke-width="0.8"/>
-  <rect x="835" y="286" width="4" height="14" rx="2" fill="#844981" fill-opacity="0.45"/>
+  <rect x="833" y="270" width="8" height="46" rx="4" fill="#001435" stroke="#003080" stroke-width="0.8"/>
+  <rect x="835" y="286" width="4" height="14" rx="2" fill="#0082f0" fill-opacity="0.45"/>
 
   <!-- ══════════════════════════════════════════
        FLOATING KPI BADGES
   ══════════════════════════════════════════ -->
   <!-- Revenue -->
-  <rect x="555" y="56" width="148" height="60" rx="13" fill="#07091e" stroke="#1a2568" stroke-width="1"/>
+  <rect x="555" y="56" width="148" height="60" rx="13" fill="#00091c" stroke="#003080" stroke-width="1"/>
   <rect x="555" y="56" width="148" height="60" rx="13" fill="url(#brand1)" fill-opacity="0.06"/>
   <text x="569" y="76"  fill="rgba(255,255,255,0.40)" font-family="system-ui,sans-serif" font-size="8.5">Revenu ce soir</text>
   <text x="569" y="96"  fill="white" font-family="system-ui,sans-serif" font-size="17" font-weight="700">2 847 €</text>
-  <text x="692" y="96"  text-anchor="end" fill="#a5b4fc" font-family="system-ui,sans-serif" font-size="9.5" font-weight="600">↑ +12%</text>
+  <text x="692" y="96"  text-anchor="end" fill="#7ec8f0" font-family="system-ui,sans-serif" font-size="9.5" font-weight="600">↑ +12%</text>
   <g fill="url(#brand3)" fill-opacity="0.65" transform="translate(569,100)">
     <rect x="0"  y="-5"  width="6" height="5"  rx="1"/>
     <rect x="8"  y="-9"  width="6" height="9"  rx="1"/>
@@ -335,19 +335,19 @@
   </g>
 
   <!-- QR Scans -->
-  <rect x="56" y="54" width="136" height="56" rx="13" fill="#07091e" stroke="#131c52" stroke-width="1"/>
+  <rect x="56" y="54" width="136" height="56" rx="13" fill="#00091c" stroke="#002d6b" stroke-width="1"/>
   <text x="70" y="74" fill="rgba(255,255,255,0.40)" font-family="system-ui,sans-serif" font-size="8.5">Scans QR / heure</text>
   <text x="70" y="94" fill="white" font-family="system-ui,sans-serif" font-size="17" font-weight="700">47</text>
-  <text x="180" y="94" text-anchor="end" fill="#a5b4fc" font-family="system-ui,sans-serif" font-size="9.5" font-weight="600">↑ +18%</text>
+  <text x="180" y="94" text-anchor="end" fill="#7ec8f0" font-family="system-ui,sans-serif" font-size="9.5" font-weight="600">↑ +18%</text>
 
   <!-- Active tables -->
-  <rect x="56" y="120" width="136" height="54" rx="13" fill="#07091e" stroke="#131c52" stroke-width="1"/>
+  <rect x="56" y="120" width="136" height="54" rx="13" fill="#00091c" stroke="#002d6b" stroke-width="1"/>
   <text x="70" y="139" fill="rgba(255,255,255,0.40)" font-family="system-ui,sans-serif" font-size="8.5">Tables actives</text>
   <rect x="70"  y="145" width="16" height="16" rx="4" fill="url(#brand1)"/>
   <rect x="90"  y="145" width="16" height="16" rx="4" fill="url(#brand1)"/>
   <rect x="110" y="145" width="16" height="16" rx="4" fill="url(#brand1)"/>
   <rect x="130" y="145" width="16" height="16" rx="4" fill="url(#brand3)"/>
-  <rect x="150" y="145" width="16" height="16" rx="4" fill="#0c1438" stroke="#131c52" stroke-width="0.5"/>
+  <rect x="150" y="145" width="16" height="16" rx="4" fill="#000e28" stroke="#002d6b" stroke-width="0.5"/>
   <text x="78"  y="157" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="7.5" font-weight="700">T1</text>
   <text x="98"  y="157" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="7.5" font-weight="700">T2</text>
   <text x="118" y="157" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="7.5" font-weight="700">T3</text>
@@ -355,24 +355,24 @@
   <text x="158" y="157" text-anchor="middle" fill="rgba(255,255,255,0.18)" font-family="system-ui,sans-serif" font-size="7.5" font-weight="700">T5</text>
 
   <!-- Satisfaction -->
-  <rect x="715" y="380" width="155" height="56" rx="13" fill="#07091e" stroke="#131c52" stroke-width="1"/>
+  <rect x="715" y="380" width="155" height="56" rx="13" fill="#00091c" stroke="#002d6b" stroke-width="1"/>
   <text x="729" y="399" fill="rgba(255,255,255,0.40)" font-family="system-ui,sans-serif" font-size="8.5">Satisfaction client</text>
   <text x="729" y="420" fill="white" font-family="system-ui,sans-serif" font-size="17" font-weight="700">4,9 / 5</text>
-  <text x="800" y="420" fill="#c4b5fd" font-family="system-ui,sans-serif" font-size="13">★★★★</text>
-  <text x="854" y="420" fill="#c4b5fd40" font-family="system-ui,sans-serif" font-size="13">★</text>
+  <text x="800" y="420" fill="#a0d4f8" font-family="system-ui,sans-serif" font-size="13">★★★★</text>
+  <text x="854" y="420" fill="#a0d4f840" font-family="system-ui,sans-serif" font-size="13">★</text>
 
   <!-- Connection dashes — brand color -->
-  <line x1="500" y1="250" x2="555" y2="230" stroke="#844981" stroke-width="1" stroke-dasharray="4,4" opacity="0.40"/>
-  <circle cx="500" cy="250" r="3" fill="#1603ae" fill-opacity="0.8"/>
-  <circle cx="555" cy="230" r="3" fill="#844981" fill-opacity="0.8"/>
+  <line x1="500" y1="250" x2="555" y2="230" stroke="#0082f0" stroke-width="1" stroke-dasharray="4,4" opacity="0.40"/>
+  <circle cx="500" cy="250" r="3" fill="#0070d1" fill-opacity="0.8"/>
+  <circle cx="555" cy="230" r="3" fill="#0082f0" fill-opacity="0.8"/>
 
-  <line x1="185" y1="285" x2="290" y2="310" stroke="#1603ae" stroke-width="1" stroke-dasharray="4,4" opacity="0.35"/>
+  <line x1="185" y1="285" x2="290" y2="310" stroke="#0070d1" stroke-width="1" stroke-dasharray="4,4" opacity="0.35"/>
 
   <!-- Floating decoration dots -->
-  <circle cx="880" cy="90"  r="2.5" fill="#844981" fill-opacity="0.45"/>
-  <circle cx="895" cy="110" r="1.5" fill="#1603ae" fill-opacity="0.35"/>
-  <circle cx="870" cy="118" r="1.5" fill="#844981" fill-opacity="0.30"/>
-  <circle cx="60"  cy="490" r="2"   fill="#1603ae" fill-opacity="0.40"/>
-  <circle cx="42"  cy="472" r="1.5" fill="#844981" fill-opacity="0.30"/>
-  <circle cx="75"  cy="508" r="1"   fill="#1603ae" fill-opacity="0.25"/>
+  <circle cx="880" cy="90"  r="2.5" fill="#0082f0" fill-opacity="0.45"/>
+  <circle cx="895" cy="110" r="1.5" fill="#0070d1" fill-opacity="0.35"/>
+  <circle cx="870" cy="118" r="1.5" fill="#0082f0" fill-opacity="0.30"/>
+  <circle cx="60"  cy="490" r="2"   fill="#0070d1" fill-opacity="0.40"/>
+  <circle cx="42"  cy="472" r="1.5" fill="#0082f0" fill-opacity="0.30"/>
+  <circle cx="75"  cy="508" r="1"   fill="#0070d1" fill-opacity="0.25"/>
 </svg>

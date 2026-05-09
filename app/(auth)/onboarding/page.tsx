@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChefHat, QrCode, Sparkles, Check, ArrowRight, Loader2, Download,
-  MapPin, Phone, Users, Clock, Globe, Star,
+  MapPin, Phone, Users, Clock, Globe, Star, Mail, Hash, Store,
 } from "lucide-react";
 import { toast } from "sonner";
 import { fireMilestoneConfetti } from "@/lib/confetti";
@@ -15,9 +15,12 @@ const STEPS = [
   { id: 3, title: "Votre QR Code", icon: QrCode },
 ];
 
-const CUISINE_TYPES = [
-  "Française", "Italienne", "Japonaise", "Thaï", "Indienne", "Mexicaine",
-  "Méditerranéenne", "Américaine", "Libanaise", "Végétalienne", "Fusion", "Autre",
+const ESTABLISHMENT_TYPES = [
+  "Restaurant", "Bistro / Brasserie", "Gastronomique", "Pizzeria",
+  "Sushi / Japonais", "Burger / Fast-casual", "Asiatique", "Libanais / Oriental",
+  "Végétalien / Bio", "Bar à cocktails", "Bar à vins / Cave", "Pub / Bar sportif",
+  "Discothèque / Club", "Rooftop / Terrasse bar", "Hôtel restaurant",
+  "Food truck", "Traiteur / Épicerie fine", "Boulangerie / Café", "Autre",
 ];
 
 const SEATING_OPTIONS = ["1–20", "21–50", "51–100", "100+"];
@@ -26,18 +29,54 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [restaurantSlug, setRestaurantSlug] = useState("demo");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     description: "",
     address: "",
+    city: "",
+    zipCode: "",
+    email: "",
     phone: "",
-    cuisineType: "",
+    establishmentType: "",
     seating: "",
     website: "",
     openingHours: "",
   });
+
+  /* Au mount : récupérer le restaurant auto-créé pour pré-remplir et avoir l'id */
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/restaurant");
+        if (!res.ok) return;
+        const { restaurants } = await res.json();
+        const r = restaurants?.[0];
+        if (r) {
+          setRestaurantId(r.id);
+          setRestaurantSlug(r.slug);
+          // Pré-remplir uniquement si déjà rempli (revisite onboarding)
+          setForm((p) => ({
+            ...p,
+            name: p.name || (r.name?.startsWith("Restaurant de ") ? "" : r.name ?? ""),
+            description: p.description || r.description || "",
+            address: p.address || r.address || "",
+            city: p.city || r.city || "",
+            email: p.email || r.email || "",
+            phone: p.phone || r.phone || "",
+            establishmentType: p.establishmentType || r.cuisineType || "",
+            seating: p.seating || r.seating || "",
+            website: p.website || r.website || "",
+            openingHours: p.openingHours || r.openingHours || "",
+          }));
+        }
+      } catch (err) {
+        console.warn("[onboarding] restaurant prefill failed:", err);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (step === 3) generateQR();
@@ -55,7 +94,9 @@ export default function OnboardingPage() {
         errorCorrectionLevel: "H",
       });
       setQrDataUrl(dataUrl);
-    } catch {}
+    } catch (err) {
+      console.warn("[onboarding] QR generation failed:", err);
+    }
   };
 
   const downloadQR = () => {
@@ -73,26 +114,58 @@ export default function OnboardingPage() {
         toast.error("Veuillez entrer le nom de votre restaurant");
         return;
       }
+
       setLoading(true);
+
+      // Si pas d'id (rare : auto-provisioning a échoué), on POST pour en créer un
+      if (!restaurantId) {
+        try {
+          const res = await fetch("/api/restaurant", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: form.name.trim() }),
+          });
+          if (!res.ok) throw new Error("create failed");
+          const { restaurant } = await res.json();
+          setRestaurantId(restaurant.id);
+          setRestaurantSlug(restaurant.slug);
+        } catch {
+          toast.error("Impossible de créer le restaurant. Réessayez.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // PATCH avec tous les champs du form
       try {
-        const res = await fetch("/api/restaurant", {
-          method: "POST",
+        const id = restaurantId ?? (await fetch("/api/restaurant").then(r => r.json()).then(j => j.restaurants?.[0]?.id));
+        if (!id) throw new Error("no id");
+        const res = await fetch(`/api/restaurant/${id}`, {
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: form.name.trim(),
-            address: form.address.trim() || undefined,
-            phone: form.phone.trim() || undefined,
+            description: form.description.trim() || null,
+            address: [form.address.trim(), form.zipCode.trim()].filter(Boolean).join(", ") || null,
+            city: form.city.trim() || null,
+            email: form.email.trim() || null,
+            phone: form.phone.trim() || null,
+            website: form.website.trim() || null,
+            cuisineType: form.establishmentType || null,
+            seating: form.seating || null,
+            openingHours: form.openingHours.trim() || null,
+            status: "ACTIVE",
           }),
         });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.restaurant?.slug) setRestaurantSlug(data.restaurant.slug);
-        }
+        if (!res.ok) throw new Error("patch failed");
+        const { restaurant } = await res.json();
+        if (restaurant?.slug) setRestaurantSlug(restaurant.slug);
       } catch {
-        toast.error("Erreur lors de la création du restaurant");
+        toast.error("Impossible de sauvegarder. Réessayez.");
         setLoading(false);
         return;
       }
+
       setLoading(false);
       setStep(2);
       return;
@@ -112,8 +185,8 @@ export default function OnboardingPage() {
   };
 
   const completionPct = Math.round(
-    ([form.name, form.address, form.phone, form.cuisineType, form.description]
-      .filter(Boolean).length / 5) * 100
+    ([form.name, form.address, form.city, form.email, form.phone, form.establishmentType, form.description]
+      .filter(Boolean).length / 7) * 100
   );
 
   return (
@@ -164,77 +237,105 @@ export default function OnboardingPage() {
                   </div>
                 </div>
               </div>
-              <h1 className="text-xl font-bold text-foreground mb-1">Votre restaurant</h1>
+              <h1 className="text-xl font-bold text-foreground mb-1">Votre établissement</h1>
               <p className="text-sm text-muted-foreground mb-6">Renseignez les informations de base — plus c'est complet, mieux les clients vous trouvent.</p>
 
               <div className="space-y-4">
-                {/* Name */}
+                {/* Nom + type */}
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Nom du restaurant <span className="text-destructive">*</span>
+                    Nom de l'établissement <span className="text-destructive">*</span>
                   </label>
                   <div className="relative">
-                    <ChefHat className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                       value={form.name}
                       onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                      placeholder="Ex: Le Petit Bistro"
+                      placeholder="Ex: Le Bar des Artistes, Sky Club..."
                       autoFocus
                       className="w-full rounded-xl bg-secondary border border-border pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                     />
                   </div>
                 </div>
 
-                {/* Cuisine + Seating */}
+                {/* Type d'établissement + capacité */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Type de cuisine</label>
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Type d'établissement</label>
                     <select
-                      value={form.cuisineType}
-                      onChange={(e) => setForm((p) => ({ ...p, cuisineType: e.target.value }))}
+                      value={form.establishmentType}
+                      onChange={(e) => setForm((p) => ({ ...p, establishmentType: e.target.value }))}
                       className="w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors appearance-none"
                     >
                       <option value="">Choisir...</option>
-                      {CUISINE_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      {ESTABLISHMENT_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                      <Users className="inline w-3 h-3 mr-1" />Couverts
+                      <Users className="inline w-3 h-3 mr-1" />Capacité
                     </label>
                     <select
                       value={form.seating}
                       onChange={(e) => setForm((p) => ({ ...p, seating: e.target.value }))}
                       className="w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors appearance-none"
                     >
-                      <option value="">Capacité...</option>
+                      <option value="">Nombre de places...</option>
                       {SEATING_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                 </div>
 
-                {/* Description */}
+                {/* Adresse rue */}
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Description</label>
-                  <textarea
-                    value={form.description}
-                    onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                    placeholder="Décrivez votre restaurant en quelques mots..."
-                    rows={2}
-                    className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none"
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    <MapPin className="inline w-3 h-3 mr-1" />Adresse (rue)
+                  </label>
+                  <input
+                    value={form.address}
+                    onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
+                    placeholder="12 Rue de la Paix"
+                    className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                   />
                 </div>
 
-                {/* Address + Phone */}
+                {/* Code postal + Ville */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                      <MapPin className="inline w-3 h-3 mr-1" />Adresse
+                      <Hash className="inline w-3 h-3 mr-1" />Code postal
                     </label>
                     <input
-                      value={form.address}
-                      onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-                      placeholder="12 Rue de la Paix, Paris"
+                      value={form.zipCode}
+                      onChange={(e) => setForm((p) => ({ ...p, zipCode: e.target.value }))}
+                      placeholder="75001"
+                      className="w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                      Ville <span className="text-destructive">*</span>
+                    </label>
+                    <input
+                      value={form.city}
+                      onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))}
+                      placeholder="Paris"
+                      className="w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Email + Téléphone */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                      <Mail className="inline w-3 h-3 mr-1" />Email de contact
+                    </label>
+                    <input
+                      value={form.email}
+                      onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                      type="email"
+                      placeholder="contact@monbar.fr"
                       className="w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                     />
                   </div>
@@ -251,7 +352,7 @@ export default function OnboardingPage() {
                   </div>
                 </div>
 
-                {/* Website + Hours */}
+                {/* Site web + Horaires */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
@@ -260,7 +361,7 @@ export default function OnboardingPage() {
                     <input
                       value={form.website}
                       onChange={(e) => setForm((p) => ({ ...p, website: e.target.value }))}
-                      placeholder="www.monresto.fr"
+                      placeholder="www.monbar.fr"
                       className="w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                     />
                   </div>
@@ -271,10 +372,22 @@ export default function OnboardingPage() {
                     <input
                       value={form.openingHours}
                       onChange={(e) => setForm((p) => ({ ...p, openingHours: e.target.value }))}
-                      placeholder="12h-14h / 19h-22h"
+                      placeholder="Mar-Dim 18h-2h"
                       className="w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                     />
                   </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Description</label>
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                    placeholder="Décrivez votre établissement en quelques mots..."
+                    rows={2}
+                    className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none"
+                  />
                 </div>
               </div>
             </>

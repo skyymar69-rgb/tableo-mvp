@@ -1,22 +1,24 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-export const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+/**
+ * Client Anthropic — fallback gracieux si la clé n'est pas configurée.
+ * Les helpers ci-dessous lèvent une erreur claire plutôt que de crash au build.
+ */
+export const anthropic = process.env.ANTHROPIC_API_KEY
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  : (null as unknown as Anthropic);
 
-export async function analyzeMenu(content: string): Promise<MenuAnalysisResult> {
-  const response = await anthropic.messages.create({
-    model: "claude-opus-4-7",
-    max_tokens: 4096,
-    messages: [
-      {
-        role: "user",
-        content: `Tu es un expert en restauration. Analyse ce menu et structure-le en JSON.
+function ensureAnthropic(): Anthropic {
+  if (!anthropic) {
+    throw new Error(
+      "Service IA indisponible : ANTHROPIC_API_KEY n'est pas configurée. " +
+      "Ajoutez-la dans Vercel → Settings → Environment Variables.",
+    );
+  }
+  return anthropic;
+}
 
-Menu brut:
-${content}
-
-Retourne UNIQUEMENT un JSON valide avec cette structure:
+const MENU_SCHEMA_PROMPT = `Retourne UNIQUEMENT un JSON valide avec cette structure:
 {
   "restaurantName": "string ou null",
   "categories": [
@@ -33,15 +35,76 @@ Retourne UNIQUEMENT un JSON valide avec cette structure:
       ]
     }
   ]
-}`,
+}`;
+
+function parseMenuJson(text: string): MenuAnalysisResult {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error("No JSON found in AI response");
+  return JSON.parse(jsonMatch[0]);
+}
+
+export async function analyzeMenu(content: string): Promise<MenuAnalysisResult> {
+  const response = await ensureAnthropic().messages.create({
+    model: "claude-opus-4-7",
+    max_tokens: 4096,
+    messages: [
+      {
+        role: "user",
+        content: `Tu es un expert en restauration. Analyse ce menu et structure-le en JSON.
+
+Menu brut:
+${content}
+
+${MENU_SCHEMA_PROMPT}`,
       },
     ],
   });
 
   const text = response.content[0].type === "text" ? response.content[0].text : "";
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("No JSON found in AI response");
-  return JSON.parse(jsonMatch[0]);
+  return parseMenuJson(text);
+}
+
+/**
+ * Analyse un menu depuis un fichier PDF ou une image (base64).
+ * Utilise Claude Vision / le support natif PDF de l'API Anthropic.
+ */
+export async function analyzeMenuFromFile(
+  base64: string,
+  mediaType: string,
+  fileType: "pdf" | "image",
+): Promise<MenuAnalysisResult> {
+  const client = ensureAnthropic();
+
+  const fileBlock: any =
+    fileType === "pdf"
+      ? {
+          type: "document",
+          source: { type: "base64", media_type: "application/pdf", data: base64 },
+        }
+      : {
+          type: "image",
+          source: { type: "base64", media_type: mediaType, data: base64 },
+        };
+
+  const response = await client.messages.create({
+    model: "claude-opus-4-7",
+    max_tokens: 4096,
+    messages: [
+      {
+        role: "user",
+        content: [
+          fileBlock,
+          {
+            type: "text",
+            text: `Tu es un expert en restauration. Analyse ce menu et structure-le en JSON.\n\n${MENU_SCHEMA_PROMPT}`,
+          },
+        ],
+      },
+    ],
+  });
+
+  const text = response.content[0].type === "text" ? response.content[0].text : "";
+  return parseMenuJson(text);
 }
 
 export async function generateAIInsights(data: {
@@ -51,7 +114,7 @@ export async function generateAIInsights(data: {
   totalRevenue: number;
   conversionRate: number;
 }): Promise<string> {
-  const response = await anthropic.messages.create({
+  const response = await ensureAnthropic().messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 512,
     messages: [

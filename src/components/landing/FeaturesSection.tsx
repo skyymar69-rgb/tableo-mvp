@@ -17,103 +17,74 @@ const features = [
   { icon: Shield,    title: "Conformité RGPD",        desc: "Conforme RGPD, gestion des cookies, anonymisation des données, sécurité enterprise.",               badge: null },
 ];
 
-function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
+function FeatureCard({ f, i }: { f: typeof features[0]; i: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [hovered, setHovered] = useState(false);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const nx = (e.clientX - rect.left) / rect.width;
-    const ny = (e.clientY - rect.top) / rect.height;
-    setTilt({ x: (ny - 0.5) * -8, y: (nx - 0.5) * 8 });
-  };
 
   return (
     <div
       ref={ref}
-      onMouseMove={handleMouseMove}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setTilt({ x: 0, y: 0 }); setHovered(false); }}
+      onMouseLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
-      onBlur={() => { setTilt({ x: 0, y: 0 }); setHovered(false); }}
+      onBlur={() => setHovered(false)}
       tabIndex={0}
       role="article"
-      className={className}
-      style={{
-        transform: hovered
-          ? `perspective(900px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(4px)`
-          : "perspective(900px) rotateX(0deg) rotateY(0deg)",
-        transition: hovered ? "transform 0.08s linear" : "transform 0.45s cubic-bezier(0.34,1.2,0.64,1)",
-        willChange: "transform",
-      }}
+      className="group relative rounded-[12px] bg-[#f5f5f5] p-8 cursor-default overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-[#111111]/20 transition-shadow duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
     >
-      {children}
+      {f.badge && (
+        <span className="absolute top-4 right-4 z-20 inline-flex items-center rounded-full bg-[#111111] px-2.5 py-0.5 text-[10px] font-semibold text-white">
+          {f.badge}
+        </span>
+      )}
+
+      <span className="absolute top-5 right-5 text-[11px] font-bold text-[#e5e7eb] tabular-nums select-none" aria-hidden="true">
+        {String(i + 1).padStart(2, "0")}
+      </span>
+
+      <div className={`w-10 h-10 rounded-[8px] flex items-center justify-center mb-5 transition-colors duration-200 ${hovered ? "bg-[#111111]" : "bg-white border border-[#e5e7eb]"}`}>
+        <f.icon className={`w-5 h-5 transition-colors duration-200 ${hovered ? "text-white" : "text-[#111111]"}`} />
+      </div>
+
+      <h3 className="text-[15px] font-semibold text-[#111111] mb-2">
+        {f.title}
+      </h3>
+      <p className="text-[13px] text-[#6b7280] leading-relaxed">
+        {f.desc}
+      </p>
     </div>
   );
 }
 
 const FeaturesSection = () => (
-  <section id="features" className="py-24 md:py-32 bg-[#f5f7fa] relative overflow-hidden">
-    <div className="container mx-auto px-6 relative">
+  <section id="features" className="py-24 md:py-32 bg-[#f5f5f5]">
+    <div className="container mx-auto px-6 max-w-[1200px]">
       <div className="text-center max-w-2xl mx-auto mb-16">
-        <p className="inline-flex items-center gap-2 text-[11px] font-semibold text-[#0070d1] mb-4 tracking-widest uppercase">
-          <span className="w-6 h-px bg-[#0070d1]/40" />
+        <p className="inline-flex items-center gap-2 text-[11px] font-semibold text-[#6b7280] mb-4 tracking-widest uppercase">
           {features.length} Fonctionnalités
-          <span className="w-6 h-px bg-[#0070d1]/40" />
         </p>
-        <h2 className="text-[clamp(1.8rem,4vw,3rem)] font-light tracking-tight leading-tight text-[#0a0a0a]">
+        <h2 className="text-[clamp(1.8rem,4vw,3rem)] font-display font-semibold tracking-[-0.03em] leading-tight text-[#111111]">
           Tout ce dont votre restaurant a besoin.{" "}
           <span className="text-[#6b7280]">Rien de superflu.</span>
         </h2>
-        <p className="mt-4 text-[15px] text-[#6b7280] leading-relaxed">
+        <p className="mt-4 text-[15px] text-[#374151] leading-relaxed">
           Une plateforme intégrée conçue pour maximiser chaque euro généré par vos tables.
         </p>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {features.map((f, i) => (
-          <TiltCard
-            key={f.title}
-            className="group relative rounded-[8px] border border-[#e8eaed] bg-white p-6 cursor-default overflow-hidden hover:border-[#0070d1]/30 hover:shadow-[0_4px_24px_rgba(0,112,209,0.08)] transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[#0070d1]/40"
-          >
-            {f.badge && (
-              <span className="absolute top-3 right-3 z-20 inline-flex items-center rounded-full bg-[#0070d1] px-2 py-0.5 text-[10px] font-bold text-white">
-                {f.badge}
-              </span>
-            )}
-
-            <span className="absolute top-4 right-5 text-[11px] font-bold text-[#e8eaed] tabular-nums select-none" aria-hidden="true">
-              {String(i + 1).padStart(2, "0")}
-            </span>
-
-            <div className="w-10 h-10 rounded-[8px] bg-[#e8f2fc] flex items-center justify-center mb-5 transition-colors duration-200 group-hover:bg-[#0070d1]">
-              <f.icon className="w-5 h-5 text-[#0070d1] group-hover:text-white transition-colors duration-200" />
-            </div>
-
-            <h3 className="text-[14px] font-semibold text-[#0a0a0a] mb-2">
-              {f.title}
-            </h3>
-            <p className="text-[13px] text-[#6b7280] leading-relaxed">
-              {f.desc}
-            </p>
-
-            <span
-              className="absolute bottom-0 left-0 h-[2px] w-0 group-hover:w-full bg-[#0070d1] transition-all duration-400 ease-out rounded-b-[8px]"
-              aria-hidden="true"
-            />
-          </TiltCard>
+          <FeatureCard key={f.title} f={f} i={i} />
         ))}
       </div>
 
       <div className="mt-12 text-center">
         <Link
           href="/onboarding"
-          className="group inline-flex items-center gap-2 rounded-full border border-[#e8eaed] bg-white px-6 py-3 text-[13px] font-medium text-[#0a0a0a] hover:border-[#0070d1]/40 hover:text-[#0070d1] transition-all focus-ring"
+          className="group inline-flex items-center gap-2 rounded-[8px] border border-[#e5e7eb] bg-white px-6 py-3 text-[14px] font-medium text-[#111111] hover:border-[#111111]/30 hover:shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all focus-ring"
         >
           Voir toutes les fonctionnalités
-          <ArrowRight className="w-4 h-4 text-[#6b7280] group-hover:text-[#0070d1] group-hover:translate-x-0.5 transition-all duration-200" />
+          <ArrowRight className="w-4 h-4 text-[#6b7280] group-hover:text-[#111111] group-hover:translate-x-0.5 transition-all duration-200" />
         </Link>
       </div>
     </div>

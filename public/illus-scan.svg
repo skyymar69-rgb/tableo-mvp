@@ -202,7 +202,7 @@
   <rect x="462" y="120" width="148" height="52" rx="12" fill="#0c1928" stroke="#1a3555" stroke-width="1"/>
   <text x="478" y="140" fill="rgba(255,255,255,0.45)" font-family="system-ui,sans-serif" font-size="8.5">Scans aujourd'hui</text>
   <text x="478" y="160" fill="white" font-family="system-ui,sans-serif" font-size="18" font-weight="700">312</text>
-  <text x="596" y="160" text-anchor="end" fill="#60a5fa" font-family="system-ui,sans-serif" font-size="9.5" font-weight="600">↑ +22%</text>
+  <text x="596" y="160" text-anchor="end" fill="#4da8e8" font-family="system-ui,sans-serif" font-size="9.5" font-weight="600">↑ +22%</text>
 
   <!-- Multi-lang badge -->
   <rect x="462" y="184" width="148" height="52" rx="12" fill="#0c1928" stroke="#1a3555" stroke-width="1"/>
