@@ -18,19 +18,7 @@ function ensureAnthropic(): Anthropic {
   return anthropic;
 }
 
-export async function analyzeMenu(content: string): Promise<MenuAnalysisResult> {
-  const response = await ensureAnthropic().messages.create({
-    model: "claude-opus-4-7",
-    max_tokens: 4096,
-    messages: [
-      {
-        role: "user",
-        content: `Tu es un expert en restauration. Analyse ce menu et structure-le en JSON.
-
-Menu brut:
-${content}
-
-Retourne UNIQUEMENT un JSON valide avec cette structure:
+const MENU_SCHEMA_PROMPT = `Retourne UNIQUEMENT un JSON valide avec cette structure:
 {
   "restaurantName": "string ou null",
   "categories": [
@@ -47,15 +35,76 @@ Retourne UNIQUEMENT un JSON valide avec cette structure:
       ]
     }
   ]
-}`,
+}`;
+
+function parseMenuJson(text: string): MenuAnalysisResult {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error("No JSON found in AI response");
+  return JSON.parse(jsonMatch[0]);
+}
+
+export async function analyzeMenu(content: string): Promise<MenuAnalysisResult> {
+  const response = await ensureAnthropic().messages.create({
+    model: "claude-opus-4-7",
+    max_tokens: 4096,
+    messages: [
+      {
+        role: "user",
+        content: `Tu es un expert en restauration. Analyse ce menu et structure-le en JSON.
+
+Menu brut:
+${content}
+
+${MENU_SCHEMA_PROMPT}`,
       },
     ],
   });
 
   const text = response.content[0].type === "text" ? response.content[0].text : "";
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("No JSON found in AI response");
-  return JSON.parse(jsonMatch[0]);
+  return parseMenuJson(text);
+}
+
+/**
+ * Analyse un menu depuis un fichier PDF ou une image (base64).
+ * Utilise Claude Vision / le support natif PDF de l'API Anthropic.
+ */
+export async function analyzeMenuFromFile(
+  base64: string,
+  mediaType: string,
+  fileType: "pdf" | "image",
+): Promise<MenuAnalysisResult> {
+  const client = ensureAnthropic();
+
+  const fileBlock: any =
+    fileType === "pdf"
+      ? {
+          type: "document",
+          source: { type: "base64", media_type: "application/pdf", data: base64 },
+        }
+      : {
+          type: "image",
+          source: { type: "base64", media_type: mediaType, data: base64 },
+        };
+
+  const response = await client.messages.create({
+    model: "claude-opus-4-7",
+    max_tokens: 4096,
+    messages: [
+      {
+        role: "user",
+        content: [
+          fileBlock,
+          {
+            type: "text",
+            text: `Tu es un expert en restauration. Analyse ce menu et structure-le en JSON.\n\n${MENU_SCHEMA_PROMPT}`,
+          },
+        ],
+      },
+    ],
+  });
+
+  const text = response.content[0].type === "text" ? response.content[0].text : "";
+  return parseMenuJson(text);
 }
 
 export async function generateAIInsights(data: {

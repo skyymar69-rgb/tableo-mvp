@@ -1,19 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeMenu } from "@/lib/anthropic";
+import { analyzeMenu, analyzeMenuFromFile } from "@/lib/anthropic";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/api-helpers";
 
 
 export const dynamic = "force-dynamic";
+
+/** Strip HTML tags and collapse whitespace for URL-sourced content. */
+function extractTextFromHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 12000);
+}
+
 export async function POST(req: NextRequest) {
   const auth = await requireUser();
   if ("error" in auth) return auth.error;
 
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File | null;
     const restaurantId = formData.get("restaurantId") as string;
-    const text = formData.get("text") as string | null;
+    const sourceType = (formData.get("sourceType") as string | null) ?? "text";
 
     if (!restaurantId) return NextResponse.json({ error: "restaurantId requis" }, { status: 400 });
 
@@ -24,17 +35,34 @@ export async function POST(req: NextRequest) {
     });
     if (!owns) return NextResponse.json({ error: "Restaurant introuvable" }, { status: 404 });
 
-    let menuContent = text || "";
-    if (file) {
-      menuContent = file.type === "text/plain"
-        ? await file.text()
-        : "Génère un menu restaurant professionnel avec 4 catégories et 3 plats chacune.";
-    }
-    if (!menuContent.trim()) {
-      menuContent = "Génère un menu restaurant français avec 4 catégories (Entrées, Plats, Desserts, Boissons) et 3 plats chacune.";
-    }
+    let analysis;
 
-    const analysis = await analyzeMenu(menuContent);
+    if (sourceType === "url") {
+      const url = formData.get("url") as string;
+      if (!url?.startsWith("http")) return NextResponse.json({ error: "URL invalide" }, { status: 400 });
+      const html = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (compatible; Tableo/1.0)" } }).then((r) => r.text());
+      const textContent = extractTextFromHtml(html);
+      if (textContent.length < 20) return NextResponse.json({ error: "Contenu de la page trop court ou inaccessible" }, { status: 400 });
+      analysis = await analyzeMenu(textContent);
+
+    } else if (sourceType === "pdf" || sourceType === "image") {
+      const file = formData.get("file") as File | null;
+      if (!file) return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
+      const arrayBuffer = await file.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString("base64");
+      analysis = await analyzeMenuFromFile(base64, file.type, sourceType);
+
+    } else {
+      // text (default)
+      const text = formData.get("text") as string | null;
+      const file = formData.get("file") as File | null;
+      let menuContent = text || "";
+      if (file?.type === "text/plain") menuContent = await file.text();
+      if (!menuContent.trim()) {
+        menuContent = "Génère un menu restaurant français avec 4 catégories (Entrées, Plats, Desserts, Boissons) et 3 plats chacune.";
+      }
+      analysis = await analyzeMenu(menuContent);
+    }
 
     const menu = await prisma.menu.create({
       data: {

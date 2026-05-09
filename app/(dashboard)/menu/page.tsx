@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Wand2, Eye, Loader2, Globe, X, Check, Sparkles } from "lucide-react";
+import { Plus, Eye, Loader2, Globe, X, Sparkles, Link2, FileText, Image as ImageIcon, AlignLeft, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { MenuEditor } from "@/components/menu/MenuEditor";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
@@ -13,9 +13,14 @@ export default function MenuPage() {
   const [selectedMenuId, setSelectedMenuId] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [importTab, setImportTab] = useState<"url" | "pdf" | "image" | "text">("url");
+  const [importUrl, setImportUrl] = useState("");
   const [importText, setImportText] = useState("");
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [dragOver, setDragOver] = useState(false);
   const [importing, setImporting] = useState(false);
   const [newMenuName, setNewMenuName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: restaurant } = useRestaurant();
   const restaurantId = restaurant?.id;
   const queryClient = useQueryClient();
@@ -69,35 +74,44 @@ export default function MenuPage() {
   });
 
   const handleImport = async () => {
-    if (!importText.trim() || importText.length < 20) {
+    if (!restaurantId) { toast.error("Restaurant non chargé"); return; }
+
+    // Validation par onglet
+    if (importTab === "url" && !importUrl.trim().startsWith("http")) {
+      toast.error("Entrez une URL valide (commençant par http)");
+      return;
+    }
+    if ((importTab === "pdf" || importTab === "image") && !importFile) {
+      toast.error("Sélectionnez un fichier");
+      return;
+    }
+    if (importTab === "text" && importText.trim().length < 20) {
       toast.error("Collez le texte de votre menu (minimum 20 caractères)");
       return;
     }
-    if (!restaurantId) {
-      toast.error("Restaurant non chargé");
-      return;
-    }
+
     setImporting(true);
     try {
-      // Utilise /api/menu/upload qui PERSISTE en DB (Menu + Categories + Dishes)
       const fd = new FormData();
       fd.append("restaurantId", restaurantId);
-      fd.append("text", importText);
+      fd.append("sourceType", importTab);
+      if (importTab === "url") fd.append("url", importUrl.trim());
+      else if (importTab === "pdf" || importTab === "image") fd.append("file", importFile!);
+      else fd.append("text", importText);
+
       const res = await fetch("/api/menu/upload", { method: "POST", body: fd });
       const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error ?? "Erreur lors de l'import");
-        return;
-      }
+      if (!res.ok) { toast.error(data.error ?? "Erreur lors de l'import"); return; }
+
       const total = data.totalDishes ?? data.menu?.categories?.reduce((s: number, c: any) => s + (c.dishes?.length ?? 0), 0) ?? 0;
       if (total > 0) {
         toast.success(`✨ ${total} plats importés en ${data.menu?.categories?.length ?? 0} catégories !`);
         queryClient.invalidateQueries({ queryKey: ["menus", restaurantId] });
         setShowImportModal(false);
-        setImportText("");
+        setImportUrl(""); setImportText(""); setImportFile(null);
         if (data.menu?.id) setSelectedMenuId(data.menu.id);
       } else {
-        toast.error("Aucun plat détecté. Vérifiez le texte.");
+        toast.error("Aucun plat détecté. Vérifiez la source.");
       }
     } catch {
       toast.error("Erreur lors de l'analyse IA");
@@ -105,6 +119,18 @@ export default function MenuPage() {
       setImporting(false);
     }
   };
+
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) setImportFile(file);
+  }, []);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setImportFile(file);
+  }, []);
 
   /* Amélioration #15 : fermeture modale sur Escape — WCAG 2.1.2 */
   useEffect(() => {
@@ -218,37 +244,188 @@ export default function MenuPage() {
         )}
       </div>
 
-      {/* Import IA Modal */}
+      {/* Import IA Modal — multi-source */}
       {showImportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) setShowImportModal(false); }}
         >
           <div
             role="dialog" aria-modal="true" aria-labelledby="modal-import-title"
-            className="rounded-2xl border border-border bg-card p-8 w-full max-w-lg shadow-card animate-scale-in"
+            className="rounded-2xl border border-border bg-card p-6 w-full max-w-lg shadow-card animate-scale-in"
           >
-            <div className="flex items-center justify-between mb-2">
-              <h2 id="modal-import-title" className="text-lg font-bold text-foreground">Import IA — Carte & Menu</h2>
-              <button onClick={() => setShowImportModal(false)} aria-label="Fermer la modale d'import IA" className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded-lg p-1">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 id="modal-import-title" className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
+                  Import IA
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Importez votre menu depuis n&apos;importe quelle source</p>
+              </div>
+              <button
+                onClick={() => setShowImportModal(false)}
+                aria-label="Fermer la modale d'import IA"
+                className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded-lg p-1"
+              >
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
-            <p className="text-sm text-muted-foreground mb-1">
-              Collez simplement le texte de votre carte — restaurant, bar, cave à cocktails, épicerie fine, café…
-            </p>
-            <p className="text-xs text-primary/80 mb-4 font-medium">
-              ✦ Aucun PDF ni image requis — le texte brut suffit.
-            </p>
-            <textarea
-              value={importText}
-              onChange={(e) => setImportText(e.target.value)}
-              placeholder={
-                "Exemple restaurant :\nEntrées\nSoupe à l'oignon - 12€\nTartare de boeuf - 18€\n\nPlats\nMagret de canard - 28€\n\n---\nExemple bar / cocktails :\nCocktails signature\nMojito Royal - 14€\nNegroni Fumé - 16€\n\nBières pression\nIPA Locale - 7€\nLager Blonde - 6€"
-              }
-              rows={12}
-              className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none font-mono text-xs"
-            />
-            <div className="flex items-center gap-3 mt-4">
+
+            {/* Tabs */}
+            <div className="flex rounded-xl bg-secondary p-1 mb-5 gap-1" role="tablist">
+              {([
+                { key: "url",   label: "Site web",  Icon: Link2 },
+                { key: "pdf",   label: "PDF",        Icon: FileText },
+                { key: "image", label: "Image",      Icon: ImageIcon },
+                { key: "text",  label: "Texte",      Icon: AlignLeft },
+              ] as const).map(({ key, label, Icon }) => (
+                <button
+                  key={key}
+                  role="tab"
+                  aria-selected={importTab === key}
+                  onClick={() => { setImportTab(key); setImportFile(null); }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                    importTab === key
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab panels */}
+            {importTab === "url" && (
+              <div>
+                <label htmlFor="import-url" className="text-xs font-medium text-muted-foreground mb-2 block">
+                  URL du site ou de la carte en ligne
+                </label>
+                <input
+                  id="import-url"
+                  type="url"
+                  value={importUrl}
+                  onChange={(e) => setImportUrl(e.target.value)}
+                  placeholder="https://restaurant-example.com/carte"
+                  className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  onKeyDown={(e) => e.key === "Enter" && !importing && handleImport()}
+                />
+                <p className="text-[11px] text-muted-foreground mt-2">Claude va extraire et structurer le menu depuis la page.</p>
+              </div>
+            )}
+
+            {importTab === "pdf" && (
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/pdf"
+                  className="sr-only"
+                  aria-label="Sélectionner un fichier PDF"
+                  onChange={handleFileSelect}
+                />
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Zone de dépôt de fichier PDF"
+                  className={`rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors ${
+                    dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                  }`}
+                  onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleFileDrop}
+                >
+                  {importFile ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <FileText className="w-5 h-5 text-primary" aria-hidden="true" />
+                      <span className="text-sm font-medium text-foreground">{importFile.name}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setImportFile(null); }}
+                        className="text-muted-foreground hover:text-foreground ml-1"
+                        aria-label="Retirer le fichier"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" aria-hidden="true" />
+                      <p className="text-sm text-foreground font-medium">Glissez votre PDF ici</p>
+                      <p className="text-xs text-muted-foreground mt-1">ou cliquez pour parcourir</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {importTab === "image" && (
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  aria-label="Sélectionner une image"
+                  onChange={handleFileSelect}
+                />
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Zone de dépôt d'image"
+                  className={`rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors ${
+                    dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                  }`}
+                  onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleFileDrop}
+                >
+                  {importFile ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <ImageIcon className="w-5 h-5 text-primary" aria-hidden="true" />
+                      <span className="text-sm font-medium text-foreground">{importFile.name}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setImportFile(null); }}
+                        className="text-muted-foreground hover:text-foreground ml-1"
+                        aria-label="Retirer le fichier"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" aria-hidden="true" />
+                      <p className="text-sm text-foreground font-medium">Photo de votre carte</p>
+                      <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WebP — Claude lit l&apos;image</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {importTab === "text" && (
+              <div>
+                <label htmlFor="import-text" className="text-xs font-medium text-muted-foreground mb-2 block">
+                  Collez le texte de votre carte
+                </label>
+                <textarea
+                  id="import-text"
+                  value={importText}
+                  onChange={(e) => setImportText(e.target.value)}
+                  placeholder={"Entrées\nSoupe à l'oignon - 12€\nTartare de bœuf - 18€\n\nPlats\nMagret de canard - 28€\nRisotto truffe - 22€\n\nDesserts\nCrème brûlée - 9€"}
+                  rows={9}
+                  className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none font-mono text-xs"
+                />
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 mt-5">
               <button
                 onClick={handleImport}
                 disabled={importing}
@@ -257,10 +434,13 @@ export default function MenuPage() {
                 {importing ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Claude analyse...</>
                 ) : (
-                  <><Sparkles className="w-4 h-4" /> Analyser et structurer</>
+                  <><Sparkles className="w-4 h-4" /> Importer le menu</>
                 )}
               </button>
-              <button onClick={() => setShowImportModal(false)} className="px-4 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <button
+                onClick={() => setShowImportModal(false)}
+                className="px-4 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Annuler
               </button>
             </div>
