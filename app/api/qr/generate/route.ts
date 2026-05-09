@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db";
 import QRCode from "qrcode";
 import { z } from "zod";
 
+
+export const dynamic = "force-dynamic";
 const schema = z.object({
   restaurantId: z.string(),
   menuId: z.string().optional(),

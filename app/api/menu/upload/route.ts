@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { analyzeMenu } from "@/lib/anthropic";
 import { prisma } from "@/lib/db";
 
+
+export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });

@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { subDays, subMonths, startOfDay, format } from "date-fns";
 
+
+export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
