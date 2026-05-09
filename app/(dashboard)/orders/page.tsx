@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingBag, Clock, Check, ChefHat, Truck, X, RefreshCw, LayoutList, Columns, AlertCircle } from "lucide-react";
+import { ShoppingBag, Clock, Check, ChefHat, Truck, X, RefreshCw, LayoutList, Columns, AlertCircle, Download, Search } from "lucide-react";
 import { formatCurrency, formatElapsed } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
@@ -73,6 +73,7 @@ export default function OrdersPage() {
   // État initial : DEMO seulement le temps que apiOrders ne soit pas encore chargé
   const [orders, setOrders] = useState<Order[]>(apiOrders ?? DEMO_ORDERS);
   const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "kanban">("list");
 
@@ -126,21 +127,33 @@ export default function OrdersPage() {
     }
   };
 
-  const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
-  const selected = orders.find((o) => o.rawId === selectedId);
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return orders.filter((o) => {
+      const matchFilter = filter === "all" || o.status === filter;
+      const matchSearch = !q || o.id.toLowerCase().includes(q) || o.table.toLowerCase().includes(q) || (o.customer ?? "").toLowerCase().includes(q);
+      return matchFilter && matchSearch;
+    });
+  }, [orders, filter, search]);
+  const selected = useMemo(() => orders.find((o) => o.rawId === selectedId), [orders, selectedId]);
 
-  const counts = {
+  const counts = useMemo(() => ({
     PENDING: orders.filter((o) => o.status === "PENDING").length,
     PREPARING: orders.filter((o) => o.status === "PREPARING").length,
     READY: orders.filter((o) => o.status === "READY").length,
-  };
+  }), [orders]);
+
+  const totalRevenue = useMemo(
+    () => orders.filter((o) => ["DELIVERED", "CONFIRMED", "PREPARING", "READY"].includes(o.status)).reduce((s, o) => s + o.total, 0),
+    [orders]
+  );
 
   return (
     <div className="min-h-screen bg-background pb-12">
       {/* #37 — PageHeader réutilisable remplace le sticky header inline */}
       <PageHeader
         title="Commandes"
-        subtitle={`${orders.length} commande${orders.length > 1 ? "s" : ""} aujourd'hui`}
+        subtitle={`${orders.length} commande${orders.length > 1 ? "s" : ""} · ${formatCurrency(totalRevenue)} encaissés`}
         actions={
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -168,6 +181,18 @@ export default function OrdersPage() {
                 <Columns className="w-3.5 h-3.5" aria-hidden="true" />
               </button>
             </div>
+            <button
+              onClick={() => {
+                if (!restaurantId) return;
+                window.open(`/api/orders/export?restaurantId=${restaurantId}`, "_blank");
+              }}
+              disabled={!restaurantId}
+              aria-label="Exporter les commandes en CSV"
+              title="Export CSV"
+              className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-ring disabled:opacity-40"
+            >
+              <Download className="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
             <button
               onClick={() => refetch()}
               aria-label="Actualiser les commandes"
@@ -236,7 +261,19 @@ export default function OrdersPage() {
       ) : (
       <div className="p-6 grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          {/* #27 — Compteur par statut dans les onglets filtres */}
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher par n°, table ou client..."
+              aria-label="Rechercher une commande"
+              className="w-full rounded-xl bg-secondary border border-border pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+            />
+          </div>
+          {/* Compteur par statut dans les onglets filtres */}
           <div className="flex items-center gap-1 bg-secondary rounded-xl p-1 w-fit flex-wrap">
             {[
               ["all",       "Toutes",       orders.length],

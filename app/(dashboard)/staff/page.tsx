@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Users, Plus, Mail, Shield, Clock, Search, Trash2, Crown, ChefHat, UserCog, X, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { formatRelative } from "@/lib/utils";
+import type { StaffMember } from "@/lib/types";
 
 const ROLE_CONFIG = {
   OWNER:   { label: "Propriétaire", icon: Crown,   color: "text-yellow-400 bg-yellow-400/10" },
@@ -22,23 +24,38 @@ const DEMO_STAFF = [
 
 export default function StaffPage() {
   const { data: restaurant } = useRestaurant();
+  const restaurantId = restaurant?.id;
+  const queryClient = useQueryClient();
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"MANAGER" | "STAFF">("STAFF");
   const [sending, setSending] = useState(false);
   const [search, setSearch] = useState("");
 
+  const { data: staffData } = useQuery({
+    queryKey: ["staff", restaurantId],
+    queryFn: async () => {
+      const res = await fetch(`/api/staff?restaurantId=${restaurantId}`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!restaurantId,
+    staleTime: 60_000,
+  });
+
+  const staffList: StaffMember[] = staffData?.staff?.length ? staffData.staff : DEMO_STAFF;
+
   const filtered = useMemo(
-    () => DEMO_STAFF.filter(
+    () => staffList.filter(
       (m) =>
         m.name.toLowerCase().includes(search.toLowerCase()) ||
         m.email.toLowerCase().includes(search.toLowerCase())
     ),
-    [search]
+    [staffList, search]
   );
 
-  const activeCount  = DEMO_STAFF.filter((s) => s.accepted).length;
-  const pendingCount = DEMO_STAFF.filter((s) => !s.accepted).length;
+  const activeCount  = staffList.filter((s) => s.accepted).length;
+  const pendingCount = staffList.filter((s) => !s.accepted).length;
 
   const handleInvite = async () => {
     if (!inviteEmail.trim() || !inviteEmail.includes("@")) {
@@ -46,11 +63,37 @@ export default function StaffPage() {
       return;
     }
     setSending(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSending(false);
-    toast.success(`Invitation envoyée à ${inviteEmail}`);
-    setInviteEmail("");
-    setShowInvite(false);
+    try {
+      if (restaurantId) {
+        const res = await fetch("/api/staff", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ restaurantId, email: inviteEmail, role: inviteRole }),
+        });
+        if (res.status === 409) { toast.error("Cet email est déjà invité"); return; }
+        if (!res.ok) throw new Error();
+        queryClient.invalidateQueries({ queryKey: ["staff", restaurantId] });
+      }
+      toast.success(`Invitation envoyée à ${inviteEmail}`);
+      setInviteEmail("");
+      setShowInvite(false);
+    } catch {
+      toast.error("Erreur lors de l'invitation");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleRemove = async (memberId: string, memberName: string) => {
+    if (!restaurantId) return;
+    try {
+      const res = await fetch(`/api/staff?id=${memberId}&restaurantId=${restaurantId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      queryClient.invalidateQueries({ queryKey: ["staff", restaurantId] });
+      toast.success(`${memberName} retiré de l'équipe`);
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    }
   };
 
   return (
@@ -159,7 +202,7 @@ export default function StaffPage() {
                     )}
                     {member.role !== "OWNER" && (
                       <button
-                        onClick={() => toast.success("Membre retiré")}
+                        onClick={() => handleRemove(member.id, member.name)}
                         aria-label={`Retirer ${member.name} de l'équipe`}
                         className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                       >

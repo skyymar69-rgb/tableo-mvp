@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, useId } from "react";
 import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, BarChart3, UtensilsCrossed, QrCode, TableIcon,
-  Users, ShoppingBag, Settings, Search, ArrowRight, Zap, Users2,
+  Users, ShoppingBag, Settings, Search, ArrowRight, Zap, Users2, ChefHat,
 } from "lucide-react";
 
 const COMMANDS = [
@@ -14,6 +14,7 @@ const COMMANDS = [
   { label: "QR Codes", href: "/qr", icon: QrCode, group: "Navigation" },
   { label: "Tables", href: "/tables", icon: TableIcon, group: "Navigation" },
   { label: "Commandes", href: "/orders", icon: ShoppingBag, group: "Navigation" },
+  { label: "Mode Cuisine", href: "/kitchen", icon: ChefHat, group: "Navigation" },
   { label: "CRM Clients", href: "/crm", icon: Users, group: "Navigation" },
   { label: "Équipe", href: "/staff", icon: Users2, group: "Navigation" },
   { label: "Paramètres", href: "/settings", icon: Settings, group: "Navigation" },

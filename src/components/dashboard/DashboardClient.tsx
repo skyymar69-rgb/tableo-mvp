@@ -28,7 +28,7 @@ interface DashboardData {
     scansToday: number;
     avgOrder: number;
   };
-  topDishes: Array<{ id: string; name: string; orders: number; revenue: number; margin: number; trend: string }>;
+  topDishes: Array<{ id: string; name: string; orders: number; revenue: number; trend: string }>;
   tables: Array<{ id: string; number: string; status: string; capacity: number }>;
   chartData: Array<{ date: string; revenue: number; orders: number; scans: number }>;
   activeTables: number;
@@ -271,12 +271,11 @@ export function DashboardClient({
     return () => { cancelled = true; clearInterval(interval); };
   }, [restaurantId]);
 
-  const handleRefresh = useCallback(async () => {
+  const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
-    router.refresh();
     setLastUpdated(new Date());
-    await new Promise((r) => setTimeout(r, 600));
-    setIsRefreshing(false);
+    router.refresh();
+    setTimeout(() => setIsRefreshing(false), 400);
     toast.success("Données actualisées !");
   }, [router]);
 
@@ -738,8 +737,7 @@ export function DashboardClient({
                     <th scope="col" className="pb-3 font-medium">Plat</th>
                     <th scope="col" className="pb-3 font-medium text-right">Cmds</th>
                     <th scope="col" className="pb-3 font-medium text-right">Revenu</th>
-                    <th scope="col" className="pb-3 font-medium text-right">Marge</th>
-                    <th scope="col" className="pb-3 font-medium text-right">Tendance</th>
+                    <th scope="col" className="pb-3 font-medium text-right">Tendance 7j</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -766,18 +764,9 @@ export function DashboardClient({
                         </td>
                         <td className="py-3 text-right text-muted-foreground tabular-nums text-xs">{d.orders}</td>
                         <td className="py-3 text-right font-semibold text-foreground tabular-nums text-xs">{formatCurrency(d.revenue)}</td>
-                        <td className="py-3 text-right tabular-nums text-xs">
-                          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                            d.margin >= 80 ? "bg-emerald-500/10 text-emerald-500"
-                            : d.margin >= 60 ? "bg-yellow-500/10 text-yellow-500"
-                            : "bg-red-500/10 text-red-500"
-                          }`}>
-                            {d.margin}%
-                          </span>
-                        </td>
-                        <td className={`py-3 text-right font-medium tabular-nums text-xs ${isTrendUp ? "text-emerald-500" : "text-red-400"}`}>
+                        <td className={`py-3 text-right font-medium tabular-nums text-xs ${isTrendUp ? "text-emerald-500" : d.trend === "—" ? "text-muted-foreground" : "text-red-400"}`}>
                           <span className="inline-flex items-center gap-0.5">
-                            {isTrendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                            {d.trend !== "—" && (isTrendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />)}
                             {d.trend}
                           </span>
                         </td>

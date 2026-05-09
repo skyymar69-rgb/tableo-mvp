@@ -1099,3 +1099,21 @@ kbd {
 .dark .card-interactive:hover {
   box-shadow: 0 8px 32px -8px hsl(0,0%,0%,0.35), 0 2px 8px -2px hsl(0,0%,0%,0.20);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * PRINT STYLESHEET — QR Code print-optimized layout
+ * ──────────────────────────────────────────────────────────────────────────── */
+@media print {
+  body > *:not(#qr-print-area) { display: none !important; }
+  #qr-print-area {
+    display: flex !important;
+    width: 100vw;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  #qr-print-area img { width: 60vmin; height: 60vmin; }
+}

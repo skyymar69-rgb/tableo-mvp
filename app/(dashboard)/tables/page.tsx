@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Grid3X3, Users, Clock, CheckCircle, Plus, X, RefreshCw } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -179,15 +179,18 @@ export default function TablesPage() {
 
   const selectedTable = tables.find((t) => t.id === selected);
 
-  const counts = {
+  const counts = useMemo(() => ({
     OCCUPIED: tables.filter((t) => t.status === "OCCUPIED").length,
     FREE: tables.filter((t) => t.status === "IDLE" || t.status === "FREE").length,
     RESERVED: tables.filter((t) => t.status === "RESERVED").length,
     CLEANING: tables.filter((t) => t.status === "CLEANING").length,
-  };
+  }), [tables]);
 
-  const filtered = filter === "all" ? tables : tables.filter((t) =>
-    filter === "FREE" ? (t.status === "IDLE" || t.status === "FREE") : t.status === filter
+  const filtered = useMemo(() =>
+    filter === "all" ? tables : tables.filter((t) =>
+      filter === "FREE" ? (t.status === "IDLE" || t.status === "FREE") : t.status === filter
+    ),
+    [tables, filter]
   );
 
   const lastUpdate = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : null;

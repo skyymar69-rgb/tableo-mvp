@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, Star, TrendingUp, TrendingDown, Mail, Phone, Award, Search, ChevronRight, Plus, AlertTriangle, Crown, Download, X, Send, Megaphone } from "lucide-react";
+import { Users, Star, TrendingUp, TrendingDown, Mail, Phone, Award, Search, ChevronRight, Plus, AlertTriangle, Crown, Download, X, Send, Megaphone, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
 import { toast } from "sonner";
@@ -26,10 +26,12 @@ const DEMO_CUSTOMERS = [
 export default function CRMPage() {
   const { data: restaurant } = useRestaurant();
   const restaurantId = restaurant?.id;
-  const [searchRaw, setSearchRaw] = useState("");
   const [search, setSearch] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [segment, setSegment] = useState("all");
   const [selected, setSelected] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<"totalVisits" | "totalSpent" | "loyaltyPoints" | "lastVisit">("totalSpent");
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
   const [exporting, setExporting] = useState(false);
   const [showCampaign, setShowCampaign] = useState(false);
   const [campaignSegment, setCampaignSegment] = useState("all");
@@ -37,6 +39,13 @@ export default function CRMPage() {
   const [campaignMessage, setCampaignMessage] = useState("");
   const [campaignType, setCampaignType] = useState<"promo" | "reactivation" | "newsletter">("promo");
   const [sending, setSending] = useState(false);
+  const [customerNotes, setCustomerNotes] = useState<Record<string, string>>(() => {
+    if (typeof window !== "undefined") {
+      try { return JSON.parse(localStorage.getItem("crm-customer-notes") ?? "{}"); } catch { return {}; }
+    }
+    return {};
+  });
+  const [editingNote, setEditingNote] = useState("");
 
   const CAMPAIGN_TEMPLATES = {
     promo: { subject: "🎉 Offre exclusive pour vous", message: "Bonjour {prénom},\n\nNous avons une offre spéciale pour vous : -15% sur votre prochaine visite avec le code FIDELE15.\n\nValable jusqu'au dimanche prochain.\n\nÀ bientôt,\nL'équipe {restaurant}" },
@@ -57,14 +66,13 @@ export default function CRMPage() {
     setSending(false);
     setShowCampaign(false);
     setCampaignSubject(""); setCampaignMessage("");
-    const count = campaignSegment === "all" ? customers.length : customers.filter((c: any) => c.rfmScore === campaignSegment).length;
+    const count = campaignSegment === "all" ? customers.length : segmentCounts(campaignSegment);
     toast.success(`Campagne envoyée à ${count} client${count > 1 ? "s" : ""} !`);
   };
 
   const handleSearchChange = useCallback((value: string) => {
-    setSearchRaw(value);
-    const t = setTimeout(() => setSearch(value), 250);
-    return () => clearTimeout(t);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setSearch(value), 250);
   }, []);
 
   const exportCSV = async () => {
@@ -110,15 +118,41 @@ export default function CRMPage() {
     totalPoints: DEMO_CUSTOMERS.reduce((s, c) => s + c.loyaltyPoints, 0),
   };
 
-  const filtered = customers.filter((c: any) => {
-    const matchSearch = !search || (c.name ?? "").toLowerCase().includes(search.toLowerCase()) || (c.email ?? "").includes(search);
+  const toggleSort = useCallback((key: typeof sortKey) => {
+    if (key === sortKey) setSortDir((d) => d === "desc" ? "asc" : "desc");
+    else { setSortKey(key); setSortDir("desc"); }
+  }, [sortKey]);
+
+  const filtered = useMemo(() => customers.filter((c: any) => {
+    const matchSearch = !search || (c.name ?? "").toLowerCase().includes(search.toLowerCase()) || (c.email ?? "").toLowerCase().includes(search.toLowerCase());
     const matchSeg = segment === "all" || c.rfmScore === segment;
     return matchSearch && matchSeg;
-  });
+  }).sort((a: any, b: any) => {
+    const av = sortKey === "lastVisit" ? new Date(a[sortKey] ?? 0).getTime() : (a[sortKey] ?? 0);
+    const bv = sortKey === "lastVisit" ? new Date(b[sortKey] ?? 0).getTime() : (b[sortKey] ?? 0);
+    return sortDir === "desc" ? bv - av : av - bv;
+  }), [customers, search, segment, sortKey, sortDir]);
 
-  const selectedCustomer = customers.find((c: any) => c.id === selected);
+  const selectedCustomer = useMemo(() => customers.find((c: any) => c.id === selected), [customers, selected]);
 
-  const segmentCounts = (key: string) => customers.filter((c: any) => c.rfmScore === key).length;
+  const saveNote = useCallback((customerId: string, note: string) => {
+    const updated = { ...customerNotes, [customerId]: note };
+    setCustomerNotes(updated);
+    if (typeof window !== "undefined") localStorage.setItem("crm-customer-notes", JSON.stringify(updated));
+    toast.success("Note sauvegardée !");
+  }, [customerNotes]);
+
+  const segmentCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const c of customers) map[(c as any).rfmScore] = (map[(c as any).rfmScore] ?? 0) + 1;
+    return (key: string) => map[key] ?? 0;
+  }, [customers]);
+
+  // Sync note input when selected customer changes
+  useEffect(() => {
+    setEditingNote(selected ? (customerNotes[selected] ?? "") : "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -166,12 +200,13 @@ export default function CRMPage() {
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input value={searchRaw} onChange={(e) => handleSearchChange(e.target.value)} placeholder="Rechercher un client..." className="w-full rounded-xl bg-secondary border border-border pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors" />
+              <input onChange={(e) => handleSearchChange(e.target.value)} placeholder="Rechercher un client..." className="w-full rounded-xl bg-secondary border border-border pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors" />
             </div>
-            <div className="flex items-center gap-1 bg-secondary rounded-xl p-1">
-              {[["all", "Tous"], ["champion", "Champions"], ["at_risk", "À risque"]].map(([key, label]) => (
+            <div className="flex items-center gap-1 bg-secondary rounded-xl p-1 flex-wrap">
+              {[["all", "Tous"], ["champion", "Champions"], ["loyal", "Fidèles"], ["promising", "Prometteurs"], ["at_risk", "À risque"], ["lost", "Perdus"]].map(([key, label]) => (
                 <button key={key} onClick={() => setSegment(key)} className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${segment === key ? "bg-gradient-warm text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                   {label}
+                  {key !== "all" && <span className="ml-1 opacity-50">({segmentCounts(key)})</span>}
                 </button>
               ))}
             </div>
@@ -182,10 +217,22 @@ export default function CRMPage() {
               <thead>
                 <tr className="text-left text-xs text-muted-foreground border-b border-border bg-secondary/30">
                   <th className="px-4 py-3 font-medium">Client</th>
-                  <th className="px-4 py-3 font-medium text-right">Visites</th>
-                  <th className="px-4 py-3 font-medium text-right">CA total</th>
+                  <th className="px-4 py-3 font-medium text-right">
+                    <button onClick={() => toggleSort("totalVisits")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
+                      Visites {sortKey === "totalVisits" ? (sortDir === "desc" ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 font-medium text-right">
+                    <button onClick={() => toggleSort("totalSpent")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
+                      CA total {sortKey === "totalSpent" ? (sortDir === "desc" ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}
+                    </button>
+                  </th>
                   <th className="px-4 py-3 font-medium">Segment</th>
-                  <th className="px-4 py-3 font-medium text-right">Points</th>
+                  <th className="px-4 py-3 font-medium text-right">
+                    <button onClick={() => toggleSort("loyaltyPoints")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
+                      Points {sortKey === "loyaltyPoints" ? (sortDir === "desc" ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}
+                    </button>
+                  </th>
                   <th className="w-8" />
                 </tr>
               </thead>
@@ -269,12 +316,28 @@ export default function CRMPage() {
                   ))}
                 </div>
               )}
-              <div className="space-y-2">
+              <div className="space-y-2 mb-4">
                 <button onClick={() => toast.success("Email envoyé !")} className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-warm py-2.5 text-xs font-semibold text-primary-foreground hover:scale-[1.01] transition-all">
                   <Mail className="w-3.5 h-3.5" /> Envoyer une offre
                 </button>
                 <button onClick={() => toast.success("Points ajoutés !")} className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-secondary py-2.5 text-xs font-medium text-foreground hover:bg-secondary/80 transition-colors">
                   <Award className="w-3.5 h-3.5 text-primary" /> Offrir des points
+                </button>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Notes internes</p>
+                <textarea
+                  value={editingNote}
+                  onChange={(e) => setEditingNote(e.target.value)}
+                  placeholder="Préférences, allergies, remarques..."
+                  rows={3}
+                  className="w-full rounded-xl bg-secondary border border-border px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none"
+                />
+                <button
+                  onClick={() => selectedCustomer && saveNote(selectedCustomer.id, editingNote)}
+                  className="mt-1.5 w-full rounded-xl border border-border bg-secondary/60 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                >
+                  Sauvegarder la note
                 </button>
               </div>
             </div>
@@ -324,7 +387,7 @@ export default function CRMPage() {
                 <label className="text-xs font-medium text-muted-foreground mb-2 block">Segment cible</label>
                 <div className="flex flex-wrap gap-1.5">
                   {[["all", "Tous les clients"], ["champion", "Champions"], ["loyal", "Fidèles"], ["at_risk", "À risque"], ["lost", "Perdus"]].map(([key, label]) => {
-                    const count = key === "all" ? customers.length : customers.filter((c: any) => c.rfmScore === key).length;
+                    const count = key === "all" ? customers.length : segmentCounts(key);
                     return (
                       <button
                         key={key}
@@ -378,7 +441,7 @@ export default function CRMPage() {
                 ) : (
                   <Send className="w-3.5 h-3.5" />
                 )}
-                {sending ? "Envoi..." : `Envoyer à ${campaignSegment === "all" ? customers.length : customers.filter((c: any) => c.rfmScore === campaignSegment).length} client(s)`}
+                {sending ? "Envoi..." : `Envoyer à ${campaignSegment === "all" ? customers.length : segmentCounts(campaignSegment)} client(s)`}
               </button>
             </div>
           </div>

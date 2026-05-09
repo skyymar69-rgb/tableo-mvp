@@ -142,10 +142,10 @@ export default function AnalyticsPage() {
             ))
           ) : (
             [
-              { label: "CA cette période", value: formatCurrency(kpis?.revenueToday ?? totalRevenue), change: "+18.4%", up: true },
-              { label: "Commandes totales", value: (kpis?.ordersToday ?? totalOrders).toString(), change: "+12.7%", up: true },
-              { label: "Taux de conversion", value: `${conversionRate}%`, change: "+2.1pts", up: true },
-              { label: "Panier moyen", value: formatCurrency(totalOrders > 0 ? totalRevenue / totalOrders : 0), change: "-1.2%", up: false },
+              { label: "CA cette période", value: formatCurrency(kpis?.revenueToday ?? totalRevenue), change: kpis?.revenueChange ? `${parseFloat(kpis.revenueChange) >= 0 ? "+" : ""}${kpis.revenueChange}%` : null, up: parseFloat(kpis?.revenueChange ?? "0") >= 0 },
+              { label: "Commandes totales", value: (kpis?.ordersToday ?? totalOrders).toLocaleString("fr-FR"), change: kpis?.ordersChange ? `${parseFloat(kpis.ordersChange) >= 0 ? "+" : ""}${kpis.ordersChange}%` : null, up: parseFloat(kpis?.ordersChange ?? "0") >= 0 },
+              { label: "Taux de conversion", value: `${conversionRate}%`, change: null, up: true },
+              { label: "Panier moyen", value: formatCurrency(totalOrders > 0 ? totalRevenue / totalOrders : 0), change: null, up: true },
             ].map((k) => (
               <div key={k.label} className="rounded-2xl border border-border bg-gradient-card p-5 card-interactive transition-all">
                 <div className="flex items-center justify-between mb-2">
@@ -177,7 +177,10 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="lg:col-span-2 rounded-2xl border border-border bg-gradient-card p-6">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Flux horaire aujourd&apos;hui</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-foreground">Flux horaire aujourd&apos;hui</h3>
+              <span className="text-[9px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border font-medium uppercase tracking-wide">Exemple</span>
+            </div>
             <HourlyBarChart data={DEMO_HOURLY} />
           </div>
         </div>
@@ -186,7 +189,10 @@ export default function AnalyticsPage() {
         <div className="rounded-2xl border border-border bg-gradient-card p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Funnel de conversion QR → Commande</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground">Funnel de conversion QR → Commande</h3>
+                {!analyticsData && <span className="text-[9px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border font-medium uppercase tracking-wide">Exemple</span>}
+              </div>
               <p className="text-xs text-muted-foreground mt-0.5">Taux global : <span className="text-primary font-semibold">{conversionRate}%</span></p>
             </div>
           </div>
@@ -229,7 +235,10 @@ export default function AnalyticsPage() {
               <Sparkles className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Prévisions IA — Semaine prochaine</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground">Prévisions IA — Semaine prochaine</h3>
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 font-medium uppercase tracking-wide">Démo</span>
+              </div>
               <p className="text-xs text-muted-foreground mt-0.5">Basé sur 90 jours d&apos;historique + météo + événements locaux</p>
             </div>
           </div>

@@ -9,7 +9,7 @@ import {
   LayoutDashboard, BarChart3, UtensilsCrossed, QrCode, TableIcon,
   Users, ShoppingBag, Settings, ChevronLeft, ChevronRight,
   Sun, Moon, LogOut, Building2, ChevronDown, Plus, Check, Users2, Search,
-  Shield, Crown, Zap, ArrowUpRight, X,
+  Shield, Crown, Zap, ArrowUpRight, X, ChefHat,
 } from "lucide-react";
 import { CommandPalette } from "./CommandPalette";
 import { useTheme } from "next-themes";
@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { label: "QR Codes",    href: "/qr",         icon: QrCode },
   { label: "Tables",      href: "/tables",     icon: TableIcon },
   { label: "Commandes",   href: "/orders",     icon: ShoppingBag },
+  { label: "Cuisine",     href: "/kitchen",    icon: ChefHat },
   { label: "CRM",         href: "/crm",        icon: Users },
   { label: "Équipe",      href: "/staff",      icon: Users2 },
   { label: "Paramètres",  href: "/settings",   icon: Settings },

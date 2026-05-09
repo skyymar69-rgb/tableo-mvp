@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Store, Palette, Bell, CreditCard, Save, Loader2, Upload, Check, Shield, Zap } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -21,20 +21,27 @@ const TIMEZONES = ["Europe/Paris", "Europe/London", "America/New_York", "America
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("restaurant");
   const [saving, setSaving] = useState(false);
-  /* #33 — isDirty : détecte les modifications non sauvegardées */
   const [isDirty, setIsDirty] = useState(false);
   const { data: restaurant } = useRestaurant();
 
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) { e.preventDefault(); e.returnValue = ""; }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
   const [restaurantForm, setRestaurantForm] = useState({
-    name: "Le Petit Bistro",
-    description: "Restaurant gastronomique français au cœur de Paris",
-    address: "12 Rue de la Paix, 75001 Paris",
-    phone: "+33 1 42 00 00 00",
-    email: "contact@lepetitbistro.fr",
-    website: "www.lepetitbistro.fr",
+    name: "",
+    description: "",
+    address: "",
+    phone: "",
+    email: "",
+    website: "",
     currency: "EUR",
     timezone: "Europe/Paris",
-    openingHours: "12:00 - 14:30 | 19:00 - 22:30",
+    openingHours: "",
   });
 
   useEffect(() => {
@@ -42,11 +49,14 @@ export default function SettingsPage() {
       setRestaurantForm((p) => ({
         ...p,
         name: restaurant.name ?? p.name,
+        description: (restaurant as any).description ?? p.description,
         address: restaurant.address ?? p.address,
         phone: restaurant.phone ?? p.phone,
         email: restaurant.email ?? p.email,
+        website: (restaurant as any).website ?? p.website,
         currency: restaurant.currency ?? p.currency,
         timezone: restaurant.timezone ?? p.timezone,
+        openingHours: (restaurant as any).openingHours ?? p.openingHours,
       }));
       if (restaurant.settings) {
         setAppearanceForm((p) => ({
@@ -81,6 +91,9 @@ export default function SettingsPage() {
   });
 
   const save = async () => {
+    if (!restaurantForm.name.trim()) { toast.error("Le nom du restaurant est requis"); return; }
+    if (restaurantForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(restaurantForm.email)) { toast.error("Email invalide"); return; }
+    if (restaurantForm.website && !/^https?:\/\/.+/.test(restaurantForm.website)) { toast.error("URL invalide (doit commencer par http:// ou https://)"); return; }
     setSaving(true);
     setIsDirty(false);
     try {
