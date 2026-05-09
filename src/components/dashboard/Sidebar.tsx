@@ -6,10 +6,10 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  LayoutDashboard, BarChart3, UtensilsCrossed, QrCode, TableIcon,
-  Users, ShoppingBag, Settings, ChevronLeft, ChevronRight,
+  LayoutDashboard, BarChart3, UtensilsCrossed, QrCode,
+  ShoppingBag, Settings, ChevronLeft, ChevronRight,
   Sun, Moon, LogOut, Building2, ChevronDown, Plus, Check, Users2, Search,
-  Shield, Crown, Zap, ArrowUpRight, X, ChefHat,
+  Shield, Crown, Zap, ArrowUpRight, X, TableIcon, Users, ChefHat,
 } from "lucide-react";
 import { CommandPalette } from "./CommandPalette";
 import { useTheme } from "next-themes";

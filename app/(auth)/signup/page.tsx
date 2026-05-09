@@ -31,18 +31,24 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 const RESTAURANT_TYPES = [
-  { value: "bistro", label: "Bistro / Brasserie" },
+  { value: "bistro",        label: "Bistro / Brasserie" },
   { value: "gastronomique", label: "Gastronomique" },
-  { value: "pizzeria", label: "Pizzeria" },
-  { value: "sushi", label: "Sushi / Japonais" },
-  { value: "burger", label: "Burger / Fast-casual" },
-  { value: "italian", label: "Italien" },
-  { value: "asiatique", label: "Asiatique" },
-  { value: "libanais", label: "Libanais / Oriental" },
-  { value: "vegan", label: "Végétalien / Bio" },
-  { value: "bar", label: "Bar / Tapas" },
-  { value: "boulangerie", label: "Boulangerie / Café" },
-  { value: "autre", label: "Autre" },
+  { value: "pizzeria",      label: "Pizzeria" },
+  { value: "sushi",         label: "Sushi / Japonais" },
+  { value: "burger",        label: "Burger / Fast-casual" },
+  { value: "asiatique",     label: "Asiatique" },
+  { value: "libanais",      label: "Libanais / Oriental" },
+  { value: "vegan",         label: "Végétalien / Bio" },
+  { value: "bar",           label: "Bar à cocktails" },
+  { value: "bar-vin",       label: "Bar à vins / Cave" },
+  { value: "pub",           label: "Pub / Bar sportif" },
+  { value: "discoteque",    label: "Discothèque / Club" },
+  { value: "rooftop",       label: "Rooftop / Terrasse bar" },
+  { value: "hotel",         label: "Hôtel restaurant" },
+  { value: "food-truck",    label: "Food truck" },
+  { value: "traiteur",      label: "Traiteur / Épicerie fine" },
+  { value: "boulangerie",   label: "Boulangerie / Café" },
+  { value: "autre",         label: "Autre" },
 ];
 
 const STRENGTH_LABELS = ["Très faible", "Faible", "Moyen", "Fort", "Très fort"];

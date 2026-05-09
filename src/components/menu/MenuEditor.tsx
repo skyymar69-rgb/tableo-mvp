@@ -33,7 +33,6 @@ interface Menu {
   categories: Category[];
 }
 
-
 /* ─── Hooks API ─────────────────────────────────────────────── */
 function useMenuMutations(restaurantId?: string) {
   const qc = useQueryClient();
@@ -58,7 +57,7 @@ function useMenuMutations(restaurantId?: string) {
       onError: () => toast.error("Erreur création article"),
     }),
     updateDish: useMutation({
-      mutationFn: async ({ id, ...patch }: { id: string } & Partial<Article>) => {
+      mutationFn: async ({ id, ...patch }: { id: string } & Partial<Article> & { categoryId?: string }) => {
         const r = await fetch(`/api/dishes/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
         if (!r.ok) throw new Error();
         return r.json();
@@ -135,66 +134,58 @@ function ArticleModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-modal="true" className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-bold text-gray-900">{initial ? "Modifier l'article" : "Nouvel article"}</h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors">
+      <div role="dialog" aria-modal="true" className="bg-card rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h2 className="text-base font-bold text-foreground">{initial ? "Modifier l'article" : "Nouvel article"}</h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/70 hover:bg-secondary transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Body */}
         <div className="px-6 py-5 space-y-4">
           {/* Catégorie */}
-          {categories.length > 1 && (
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">Catégorie</label>
-              <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition"
-              >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Catégorie</label>
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="w-full rounded-xl border border-border bg-secondary px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:outline-none transition"
+            >
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
 
-          {/* Nom + image placeholder */}
+          {/* Nom + image */}
           <div className="flex gap-3">
             <div className="flex-1 space-y-3">
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">Nom de l'article *</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Nom *</label>
                 <input
                   autoFocus
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submit()}
                   placeholder="Ex : Mojito Royal, IPA Locale..."
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition"
+                  className="w-full rounded-xl border border-border bg-secondary px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50 focus:outline-none transition"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">Prix *</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Prix *</label>
                 <div className="relative">
                   <input
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && submit()}
-                    type="number"
-                    step="0.10"
-                    min="0"
-                    placeholder="0.00"
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 pr-8 text-sm text-gray-900 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition"
+                    type="number" step="0.10" min="0" placeholder="0.00"
+                    className="w-full rounded-xl border border-border bg-secondary px-3 py-2.5 pr-8 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:outline-none transition"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">€</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground/70">€</span>
                 </div>
               </div>
             </div>
-            {/* Image placeholder */}
-            <div className="w-24 h-24 mt-5 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-1 text-gray-300 hover:border-indigo-300 hover:text-indigo-300 cursor-pointer transition-colors shrink-0">
+            <div className="w-24 h-24 mt-5 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 text-gray-300 hover:border-primary/40 hover:text-primary/60 cursor-pointer transition-colors shrink-0">
               <ImageIcon className="w-5 h-5" />
               <span className="text-[10px] font-medium">Photo</span>
             </div>
@@ -202,29 +193,23 @@ function ArticleModal({
 
           {/* Description */}
           <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">Description</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
               placeholder="Ingrédients, caractéristiques..."
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition resize-none"
+              className="w-full rounded-xl border border-border bg-secondary px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50 focus:outline-none transition resize-none"
             />
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center gap-3">
-          <button
-            onClick={submit}
-            className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 py-2.5 text-sm font-semibold text-white transition-colors flex items-center justify-center gap-2"
-          >
+        <div className="px-6 py-4 border-t border-border flex items-center gap-3">
+          <button onClick={submit} className="flex-1 rounded-xl bg-gradient-warm hover:opacity-90 py-2.5 text-sm font-semibold text-white transition-colors flex items-center justify-center gap-2">
             <Check className="w-4 h-4" />
             {initial ? "Enregistrer" : "Ajouter l'article"}
           </button>
-          <button onClick={onClose} className="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 transition-colors">
-            Annuler
-          </button>
+          <button onClick={onClose} className="px-4 py-2.5 text-sm text-muted-foreground hover:text-gray-700 transition-colors">Annuler</button>
         </div>
       </div>
     </div>
@@ -233,15 +218,11 @@ function ArticleModal({
 
 /* ─── Modale Traduction ─────────────────────────────────────── */
 const TRANSLATE_LANGS = [
-  { code: "EN", label: "🇬🇧 Anglais" },
-  { code: "ES", label: "🇪🇸 Espagnol" },
-  { code: "DE", label: "🇩🇪 Allemand" },
-  { code: "IT", label: "🇮🇹 Italien" },
-  { code: "PT", label: "🇵🇹 Portugais" },
-  { code: "ZH", label: "🇨🇳 Chinois" },
+  { code: "EN", label: "🇬🇧 Anglais" }, { code: "ES", label: "🇪🇸 Espagnol" },
+  { code: "DE", label: "🇩🇪 Allemand" }, { code: "IT", label: "🇮🇹 Italien" },
+  { code: "PT", label: "🇵🇹 Portugais" }, { code: "ZH", label: "🇨🇳 Chinois" },
   { code: "JA", label: "🇯🇵 Japonais" },
 ];
-
 type TranslatedCategory = { id: string; name: string; dishes: { id: string; name: string; description?: string | null }[] };
 
 function TranslateModal({ menu, onClose }: { menu: { id: string; name: string }; onClose: () => void }) {
@@ -271,43 +252,43 @@ function TranslateModal({ menu, onClose }: { menu: { id: string; name: string };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-modal="true" className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-          <div className="flex items-center gap-2"><Languages className="w-4 h-4 text-indigo-600" /><h2 className="text-base font-bold text-gray-900">Traduire la carte</h2><span className="text-sm text-gray-400">— {menu.name}</span></div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors"><X className="w-4 h-4" /></button>
+      <div role="dialog" aria-modal="true" className="bg-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
+          <div className="flex items-center gap-2"><Languages className="w-4 h-4 text-primary" /><h2 className="text-base font-bold text-foreground">Traduire la carte</h2><span className="text-sm text-muted-foreground/70">— {menu.name}</span></div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/70 hover:bg-secondary transition-colors"><X className="w-4 h-4" /></button>
         </div>
-        <div className="px-6 py-4 border-b border-gray-100 shrink-0">
+        <div className="px-6 py-4 border-b border-border shrink-0">
           <div className="flex flex-wrap gap-2 mb-4">
             {TRANSLATE_LANGS.map((l) => (
               <button key={l.code} onClick={() => { setLang(l.code); setResult(null); }}
-                className={cn("rounded-lg px-3 py-1.5 text-xs font-medium transition-all border", lang === l.code ? "bg-indigo-600 text-white border-transparent" : "border-gray-200 text-gray-600 hover:border-indigo-300")}>
+                className={cn("rounded-lg px-3 py-1.5 text-xs font-medium transition-all border", lang === l.code ? "bg-gradient-warm text-primary-foreground border-transparent" : "border-border text-muted-foreground hover:border-primary/40")}>
                 {l.label}
               </button>
             ))}
           </div>
           <button onClick={translate} disabled={loading}
-            className="flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50">
+            className="flex items-center gap-2 rounded-xl bg-gradient-warm hover:opacity-90 px-5 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50">
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Languages className="w-4 h-4" />}
             {loading ? "Traduction en cours..." : `Traduire en ${TRANSLATE_LANGS.find((l) => l.code === lang)?.label ?? lang}`}
           </button>
         </div>
         <div className="overflow-y-auto flex-1 px-6 py-4">
-          {!result && !loading && <p className="text-sm text-gray-400 text-center py-8">Propulsé par DeepL (si configuré) ou Claude IA — gratuit.</p>}
-          {loading && <div className="flex items-center justify-center py-12 gap-3 text-gray-400"><Loader2 className="w-5 h-5 animate-spin text-indigo-500" /><span className="text-sm">Traduction en cours...</span></div>}
+          {!result && !loading && <p className="text-sm text-muted-foreground/70 text-center py-8">Propulsé par DeepL (si configuré) ou Claude IA — gratuit.</p>}
+          {loading && <div className="flex items-center justify-center py-12 gap-3 text-muted-foreground/70"><Loader2 className="w-5 h-5 animate-spin text-primary" /><span className="text-sm">Traduction en cours...</span></div>}
           {result && (
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-gray-400">{engine === "deepl" ? "✓ DeepL" : "✓ Claude IA"} — aperçu</p>
-                <button onClick={copyAll} className="text-xs text-indigo-600 hover:underline">Copier tout</button>
+                <p className="text-xs text-muted-foreground/70">{engine === "deepl" ? "✓ DeepL" : "✓ Claude IA"} — aperçu</p>
+                <button onClick={copyAll} className="text-xs text-primary hover:underline">Copier tout</button>
               </div>
               {result.map((cat) => (
-                <div key={cat.id} className="rounded-xl border border-gray-100 overflow-hidden">
-                  <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100"><p className="text-xs font-bold text-gray-600 uppercase tracking-wide">{cat.name}</p></div>
+                <div key={cat.id} className="rounded-xl border border-border overflow-hidden">
+                  <div className="px-4 py-2.5 bg-secondary border-b border-border"><p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">{cat.name}</p></div>
                   <div className="p-3 space-y-2">
                     {cat.dishes.map((dish) => (
-                      <div key={dish.id} className="rounded-lg bg-white border border-gray-100 px-3 py-2">
-                        <p className="text-sm font-medium text-gray-900">{dish.name}</p>
-                        {dish.description && <p className="text-xs text-gray-500 mt-0.5">{dish.description}</p>}
+                      <div key={dish.id} className="rounded-lg bg-card border border-border px-3 py-2">
+                        <p className="text-sm font-medium text-foreground">{dish.name}</p>
+                        {dish.description && <p className="text-xs text-muted-foreground mt-0.5">{dish.description}</p>}
                       </div>
                     ))}
                   </div>
@@ -321,59 +302,33 @@ function TranslateModal({ menu, onClose }: { menu: { id: string; name: string };
   );
 }
 
-/* ─── Ligne article ─────────────────────────────────────────── */
-function ArticleRow({ article, onToggle, onEdit, onDelete }: {
-  article: Article;
-  onToggle: (id: string, v: boolean) => void;
-  onEdit: (a: Article) => void;
-  onDelete: (id: string) => void;
-}) {
-  return (
-    <div className={cn("flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0 group hover:bg-gray-50 transition-colors", !article.isAvailable && "opacity-50")}>
-      <GripVertical className="w-4 h-4 text-gray-300 cursor-grab shrink-0" />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-900 truncate">{article.name}</span>
-          {article.labels.slice(0, 2).map((l) => <span key={l} className="text-[11px]">{DISH_LABEL_EMOJI[l] ?? ""}</span>)}
-        </div>
-        {article.description && <p className="text-xs text-gray-400 truncate mt-0.5">{article.description}</p>}
-      </div>
-      <span className="text-sm font-bold text-gray-900 tabular-nums shrink-0">{article.price.toFixed(2)} €</span>
-      <div className="flex items-center gap-1.5 shrink-0">
-        <button
-          onClick={() => onToggle(article.id, !article.isAvailable)}
-          className="transition-colors"
-          aria-label="Disponibilité"
-        >
-          {article.isAvailable
-            ? <ToggleRight className="w-6 h-6 text-indigo-600" />
-            : <ToggleLeft className="w-6 h-6 text-gray-300" />}
-        </button>
-        <button onClick={() => onEdit(article)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-white hover:text-gray-700 hover:shadow-sm transition-all opacity-0 group-hover:opacity-100">
-          <Pencil className="w-3.5 h-3.5" />
-        </button>
-        <button onClick={() => { if (confirm(`Supprimer "${article.name}" ?`)) onDelete(article.id); }} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100">
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Section catégorie ─────────────────────────────────────── */
-function CategorySection({ category, onAddArticle, onToggle, onEdit, onDelete, onDeleteCategory, onRename }: {
+/* ─── CategoryDropZone (panneau gauche) ─────────────────────── */
+function CategoryDropZone({
+  category,
+  isDragOver,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onToggle,
+  onEdit,
+  onDelete,
+  onDeleteCategory,
+  onRename,
+}: {
   category: Category;
-  onAddArticle: (catId: string) => void;
+  isDragOver: boolean;
+  onDragOver: (catId: string) => void;
+  onDragLeave: () => void;
+  onDrop: (catId: string) => void;
   onToggle: (id: string, v: boolean) => void;
   onEdit: (a: Article, catId: string) => void;
   onDelete: (id: string) => void;
-  onDeleteCategory: (id: string, name: string) => void;
+  onDeleteCategory: (id: string) => void;
   onRename: (id: string, name: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(category.name);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const commitRename = () => {
     const trimmed = nameValue.trim();
@@ -382,72 +337,135 @@ function CategorySection({ category, onAddArticle, onToggle, onEdit, onDelete, o
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-4 shadow-sm">
-      {/* Category header */}
-      <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-100">
-        <GripVertical className="w-4 h-4 text-gray-300 cursor-grab shrink-0" />
-        <button onClick={() => setCollapsed(!collapsed)} className="shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
+    <div
+      className={cn(
+        "rounded-2xl border overflow-hidden mb-3 transition-all",
+        isDragOver ? "border-indigo-400 bg-indigo-50 shadow-md ring-2 ring-indigo-200" : "border-border bg-card shadow-sm"
+      )}
+      onDragOver={(e) => { e.preventDefault(); onDragOver(category.id); }}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => { e.preventDefault(); onDrop(category.id); }}
+    >
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-3 bg-secondary border-b border-border">
+        <button onClick={() => setCollapsed(!collapsed)} className="shrink-0 text-muted-foreground/70 hover:text-muted-foreground transition-colors">
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
 
         {editingName ? (
           <input
-            ref={inputRef}
-            autoFocus
-            value={nameValue}
+            autoFocus value={nameValue}
             onChange={(e) => setNameValue(e.target.value)}
             onBlur={commitRename}
             onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") { setNameValue(category.name); setEditingName(false); } }}
-            className="flex-1 text-sm font-semibold bg-white border border-indigo-300 rounded-lg px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className="flex-1 text-sm font-semibold bg-card border border-indigo-300 rounded-lg px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           />
         ) : (
-          <button
-            onClick={() => setEditingName(true)}
-            className="flex-1 text-left text-sm font-semibold text-gray-800 hover:text-indigo-600 transition-colors truncate"
-            title="Cliquer pour renommer"
-          >
+          <button onClick={() => setEditingName(true)} className="flex-1 text-left text-sm font-semibold text-gray-800 hover:text-primary transition-colors truncate" title="Cliquer pour renommer">
             {category.name}
           </button>
         )}
 
-        <span className="text-xs text-gray-400 shrink-0">{category.dishes.length} article{category.dishes.length !== 1 ? "s" : ""}</span>
+        <span className="text-xs text-muted-foreground/70 shrink-0">{category.dishes.length}</span>
         <button
-          onClick={() => { if (confirm(`Supprimer la catégorie "${category.name}" et tous ses articles ?`)) onDeleteCategory(category.id, category.name); }}
+          onClick={() => { if (confirm(`Supprimer "${category.name}" et tous ses articles ?`)) onDeleteCategory(category.id); }}
           className="w-6 h-6 rounded-md flex items-center justify-center text-gray-300 hover:bg-red-50 hover:text-red-400 transition-all shrink-0"
-          aria-label="Supprimer la catégorie"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
 
+      {/* Drop hint */}
+      {isDragOver && (
+        <div className="mx-3 my-2 rounded-xl border-2 border-dashed border-indigo-300 py-3 text-center text-xs text-primary font-medium">
+          Déposer ici dans «{category.name}»
+        </div>
+      )}
+
       {/* Articles */}
       {!collapsed && (
         <div>
-          {category.dishes.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm text-gray-400">
-              Aucun article dans cette catégorie.
-            </div>
+          {category.dishes.length === 0 && !isDragOver ? (
+            <p className="px-4 py-5 text-center text-xs text-muted-foreground/70">
+              Glissez des articles ici depuis la bibliothèque →
+            </p>
           ) : (
             category.dishes.map((article) => (
-              <ArticleRow
-                key={article.id}
-                article={article}
-                onToggle={onToggle}
-                onEdit={(a) => onEdit(a, category.id)}
-                onDelete={onDelete}
-              />
+              <div key={article.id} className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-gray-50 last:border-0 group hover:bg-secondary transition-colors text-sm", !article.isAvailable && "opacity-50")}>
+                <GripVertical className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-foreground truncate block">{article.name}</span>
+                  {article.description && <span className="text-xs text-muted-foreground/70 truncate block">{article.description}</span>}
+                </div>
+                <span className="text-xs font-bold text-gray-700 tabular-nums shrink-0">{article.price.toFixed(2)}€</span>
+                <button onClick={() => onToggle(article.id, !article.isAvailable)} className="shrink-0">
+                  {article.isAvailable ? <ToggleRight className="w-5 h-5 text-primary" /> : <ToggleLeft className="w-5 h-5 text-gray-300" />}
+                </button>
+                <button onClick={() => onEdit(article, category.id)} className="w-6 h-6 rounded flex items-center justify-center text-muted-foreground/70 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-all">
+                  <Pencil className="w-3 h-3" />
+                </button>
+                <button onClick={() => { if (confirm(`Supprimer "${article.name}" ?`)) onDelete(article.id); }} className="w-6 h-6 rounded flex items-center justify-center text-muted-foreground/70 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
             ))
           )}
-          <div className="px-4 py-2.5 border-t border-gray-50">
-            <button
-              onClick={() => onAddArticle(category.id)}
-              className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" /> Ajouter un article ici
-            </button>
-          </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── ArticleCard (panneau droit, draggable) ────────────────── */
+function ArticleCard({
+  article,
+  categoryName,
+  onDragStart,
+  onEdit,
+  onDelete,
+  onToggle,
+}: {
+  article: Article;
+  categoryName: string;
+  onDragStart: (id: string) => void;
+  onEdit: (a: Article) => void;
+  onDelete: (id: string) => void;
+  onToggle: (id: string, v: boolean) => void;
+}) {
+  return (
+    <div
+      draggable
+      onDragStart={() => onDragStart(article.id)}
+      className={cn(
+        "group rounded-xl border border-border bg-card px-3 py-2.5 cursor-grab active:cursor-grabbing hover:border-indigo-200 hover:shadow-sm transition-all",
+        !article.isAvailable && "opacity-50"
+      )}
+    >
+      <div className="flex items-start gap-2">
+        <GripVertical className="w-4 h-4 text-gray-300 mt-0.5 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-sm font-semibold text-foreground truncate">{article.name}</span>
+            {article.labels.slice(0, 2).map((l) => <span key={l} className="text-[10px]">{DISH_LABEL_EMOJI[l] ?? ""}</span>)}
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[10px] text-muted-foreground/70 bg-gray-100 rounded px-1.5 py-0.5 truncate max-w-[100px]">{categoryName}</span>
+            {article.description && <span className="text-xs text-muted-foreground/70 truncate">{article.description}</span>}
+          </div>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-xs font-bold text-gray-800 tabular-nums">{article.price.toFixed(2)}€</span>
+          <button onClick={() => onToggle(article.id, !article.isAvailable)} className="ml-1">
+            {article.isAvailable ? <ToggleRight className="w-5 h-5 text-primary" /> : <ToggleLeft className="w-5 h-5 text-gray-300" />}
+          </button>
+          <button onClick={() => onEdit(article)} className="w-6 h-6 rounded flex items-center justify-center text-muted-foreground/70 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-all">
+            <Pencil className="w-3 h-3" />
+          </button>
+          <button onClick={() => { if (confirm(`Supprimer "${article.name}" ?`)) onDelete(article.id); }} className="w-6 h-6 rounded flex items-center justify-center text-muted-foreground/70 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+            <Trash2 className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -458,16 +476,17 @@ export function MenuEditor({ menu, restaurantId, onBack }: { menu: Menu; restaur
   const [showTranslate, setShowTranslate] = useState(false);
   const [articleModal, setArticleModal] = useState<{ open: boolean; catId?: string; editing?: Article & { categoryId: string } }>({ open: false });
 
+  /* Drag state */
+  const [draggedDishId, setDraggedDishId] = useState<string | null>(null);
+  const [dragOverCatId, setDragOverCatId] = useState<string | null>(null);
+
   const openAdd = (catId?: string) => setArticleModal({ open: true, catId: catId ?? menu.categories[0]?.id });
   const openEdit = (article: Article, catId: string) => setArticleModal({ open: true, editing: { ...article, categoryId: catId } });
   const closeModal = () => setArticleModal({ open: false });
 
   const handleSaveArticle = (data: { categoryId: string; name: string; price: number; description?: string }, id?: string) => {
-    if (id) {
-      m.updateDish.mutate({ id, name: data.name, price: data.price, description: data.description ?? null });
-    } else {
-      m.addDish.mutate({ categoryId: data.categoryId, name: data.name, price: data.price, description: data.description });
-    }
+    if (id) m.updateDish.mutate({ id, name: data.name, price: data.price, description: data.description ?? null });
+    else m.addDish.mutate({ categoryId: data.categoryId, name: data.name, price: data.price, description: data.description });
     closeModal();
   };
 
@@ -476,24 +495,40 @@ export function MenuEditor({ menu, restaurantId, onBack }: { menu: Menu; restaur
     if (name?.trim()) m.addCategory.mutate({ menuId: menu.id, name: name.trim() });
   };
 
-  const totalArticles = menu.categories.reduce((s, c) => s + c.dishes.length, 0);
+  const handleDrop = (targetCatId: string) => {
+    if (!draggedDishId) return;
+    const sourceCat = menu.categories.find((c) => c.dishes.some((d) => d.id === draggedDishId));
+    if (sourceCat?.id !== targetCatId) {
+      m.updateDish.mutate({ id: draggedDishId, categoryId: targetCatId });
+      toast.success("Article déplacé");
+    }
+    setDraggedDishId(null);
+    setDragOverCatId(null);
+  };
+
+  /* Flatten all articles with category info for right panel */
+  const allArticles = menu.categories.flatMap((cat) =>
+    cat.dishes.map((dish) => ({ ...dish, categoryId: cat.id, categoryName: cat.name }))
+  );
+
+  const totalArticles = allArticles.length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-secondary">
       {/* Top bar */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-10 bg-card border-b border-border px-6 h-14 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors">
+          <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" /> Mes cartes
           </button>
           <span className="text-gray-200">|</span>
-          <h1 className="text-sm font-bold text-gray-900">{menu.name}</h1>
-          <span className="text-xs text-gray-400">{totalArticles} article{totalArticles !== 1 ? "s" : ""}</span>
+          <h1 className="text-sm font-bold text-foreground">{menu.name}</h1>
+          <span className="text-xs text-muted-foreground/70">{totalArticles} article{totalArticles !== 1 ? "s" : ""}</span>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowTranslate(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
+            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
           >
             <Languages className="w-3.5 h-3.5" /> Traduire
           </button>
@@ -502,9 +537,7 @@ export function MenuEditor({ menu, restaurantId, onBack }: { menu: Menu; restaur
             disabled={m.publishMenu.isPending}
             className={cn(
               "rounded-lg px-4 py-1.5 text-xs font-semibold transition-all",
-              menu.isPublished
-                ? "bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200"
-                : "bg-indigo-600 text-white hover:bg-indigo-700"
+              menu.isPublished ? "bg-gray-100 border border-border text-muted-foreground hover:bg-gray-200" : "bg-indigo-600 text-white hover:bg-indigo-700"
             )}
           >
             {m.publishMenu.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> : menu.isPublished ? "En ligne ✓" : "Publier"}
@@ -512,50 +545,91 @@ export function MenuEditor({ menu, restaurantId, onBack }: { menu: Menu; restaur
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Actions primaires */}
-        <div className="flex gap-3 mb-6">
-          <button
-            onClick={() => openAdd()}
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 py-3 text-sm font-semibold text-white transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" /> Nouvel article
-          </button>
-          <button
-            onClick={handleAddCategory}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-medium text-gray-700 hover:border-indigo-300 hover:text-indigo-600 transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" /> Nouvelle catégorie
-          </button>
-        </div>
+      {/* Two-column layout */}
+      <div className="flex gap-0 h-[calc(100vh-56px)]">
 
-        {/* Empty state */}
-        {menu.categories.length === 0 && (
-          <div className="rounded-2xl border-2 border-dashed border-gray-200 py-16 text-center">
-            <p className="text-sm text-gray-500 mb-4">Votre carte est vide.</p>
+        {/* LEFT — Catégories (60%) */}
+        <div className="flex-1 overflow-y-auto px-4 py-5 border-r border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Catégories</h2>
             <button
               onClick={handleAddCategory}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors shadow-sm"
             >
-              <Plus className="w-4 h-4" /> Créer la première catégorie
+              <Plus className="w-3.5 h-3.5" /> Nouvelle catégorie
             </button>
           </div>
-        )}
 
-        {/* Catégories + articles */}
-        {menu.categories.map((cat) => (
-          <CategorySection
-            key={cat.id}
-            category={cat}
-            onAddArticle={openAdd}
-            onToggle={(id, v) => m.updateDish.mutate({ id, isAvailable: v })}
-            onEdit={openEdit}
-            onDelete={(id) => m.deleteDish.mutate(id)}
-            onDeleteCategory={(id, name) => m.deleteCategory.mutate(id)}
-            onRename={(id, name) => m.renameCategory.mutate({ id, name })}
-          />
-        ))}
+          {menu.categories.length === 0 ? (
+            <div className="rounded-2xl border-2 border-dashed border-border py-16 text-center">
+              <p className="text-sm text-muted-foreground mb-4">Créez votre première catégorie pour commencer.</p>
+              <button
+                onClick={handleAddCategory}
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" /> Créer une catégorie
+              </button>
+            </div>
+          ) : (
+            menu.categories.map((cat) => (
+              <CategoryDropZone
+                key={cat.id}
+                category={cat}
+                isDragOver={dragOverCatId === cat.id}
+                onDragOver={setDragOverCatId}
+                onDragLeave={() => setDragOverCatId(null)}
+                onDrop={handleDrop}
+                onToggle={(id, v) => m.updateDish.mutate({ id, isAvailable: v })}
+                onEdit={openEdit}
+                onDelete={(id) => m.deleteDish.mutate(id)}
+                onDeleteCategory={(id) => m.deleteCategory.mutate(id)}
+                onRename={(id, name) => m.renameCategory.mutate({ id, name })}
+              />
+            ))
+          )}
+        </div>
+
+        {/* RIGHT — Bibliothèque d'articles (40%) */}
+        <div className="w-[380px] shrink-0 overflow-y-auto px-4 py-5 bg-secondary">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Bibliothèque</h2>
+              <p className="text-[10px] text-muted-foreground/70 mt-0.5">Glissez un article dans une catégorie</p>
+            </div>
+            <button
+              onClick={() => openAdd()}
+              className="flex items-center gap-1.5 rounded-lg bg-gradient-warm hover:opacity-90 px-3 py-1.5 text-xs font-semibold text-white transition-colors shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" /> Nouvel article
+            </button>
+          </div>
+
+          {allArticles.length === 0 ? (
+            <div className="rounded-2xl border-2 border-dashed border-border py-12 text-center">
+              <p className="text-sm text-muted-foreground/70 mb-3">Aucun article pour l'instant.</p>
+              <button
+                onClick={() => openAdd()}
+                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
+              >
+                <Plus className="w-3.5 h-3.5" /> Créer le premier article
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {allArticles.map((article) => (
+                <ArticleCard
+                  key={article.id}
+                  article={article}
+                  categoryName={article.categoryName}
+                  onDragStart={setDraggedDishId}
+                  onEdit={(a) => openEdit(a, article.categoryId)}
+                  onDelete={(id) => m.deleteDish.mutate(id)}
+                  onToggle={(id, v) => m.updateDish.mutate({ id, isAvailable: v })}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Article modal */}

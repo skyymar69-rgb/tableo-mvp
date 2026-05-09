@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 
 type OrderItem = { name: string; qty: number; notes?: string };
 type KitchenOrder = {
@@ -82,30 +83,30 @@ export default function KitchenPage() {
 
   const orders = apiOrders ?? DEMO_ORDERS;
 
-  const markReady = async (rawId: string) => {
-    toast.success("Commande marquée Prête !");
+  const patchOrder = async (rawId: string, status: string) => {
     if (rawId.startsWith("demo-")) return;
     try {
-      await fetch(`/api/orders/${rawId}`, {
+      const res = await fetch(`/api/orders/${rawId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "READY" }),
+        body: JSON.stringify({ status }),
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       refetch();
-    } catch { toast.error("Erreur de mise à jour"); }
+    } catch (err) {
+      console.error("[kitchen] patch failed:", err);
+      toast.error("Erreur de mise à jour");
+    }
   };
 
-  const startPreparing = async (rawId: string) => {
+  const markReady = (rawId: string) => {
+    toast.success("Commande marquée Prête !");
+    patchOrder(rawId, "READY");
+  };
+
+  const startPreparing = (rawId: string) => {
     toast.success("Préparation lancée !");
-    if (rawId.startsWith("demo-")) return;
-    try {
-      await fetch(`/api/orders/${rawId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "PREPARING" }),
-      });
-      refetch();
-    } catch { toast.error("Erreur de mise à jour"); }
+    patchOrder(rawId, "PREPARING");
   };
 
   const pending = useMemo(() => orders.filter((o) => o.status === "PENDING" || o.status === "CONFIRMED"), [orders]);
@@ -114,32 +115,36 @@ export default function KitchenPage() {
 
   return (
     <div className="min-h-screen bg-background pb-8">
-      {/* Header */}
-      <div className="sticky top-0 z-10 glass border-b border-border/40 px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/orders" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ChevronLeft className="w-4 h-4" /> Commandes
-          </Link>
-          <div className="w-px h-4 bg-border" />
-          <ChefHat className="w-5 h-5 text-primary" aria-hidden="true" />
-          <h1 className="text-base font-bold text-foreground">Mode Cuisine</h1>
-          <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold uppercase tracking-wide">Live</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="font-semibold text-yellow-400">{pending.length}</span> à préparer ·
-            <span className="font-semibold text-primary">{preparing.length}</span> en cours ·
-            <span className="font-semibold text-emerald-400">{ready.length}</span> prêtes
+      <PageHeader
+        title={
+          <span className="flex items-center gap-2">
+            <ChefHat className="w-4 h-4 text-primary" aria-hidden="true" />
+            Mode Cuisine
+            <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold uppercase tracking-wide">Live</span>
+          </span>
+        }
+        subtitle={
+          <span className="flex items-center gap-1.5">
+            <Link href="/orders" className="hover:text-foreground transition-colors">← Commandes</Link>
+          </span>
+        }
+        actions={
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="font-semibold text-yellow-400">{pending.length}</span> à préparer ·
+              <span className="font-semibold text-primary">{preparing.length}</span> en cours ·
+              <span className="font-semibold text-emerald-400">{ready.length}</span> prêtes
+            </div>
+            <button
+              onClick={() => refetch()}
+              aria-label="Rafraîchir les commandes cuisine"
+              className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-ring"
+            >
+              <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
           </div>
-          <button
-            onClick={() => refetch()}
-            aria-label="Rafraîchir les commandes"
-            className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Kanban Kitchen */}
       <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
