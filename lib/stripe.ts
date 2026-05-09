@@ -1,9 +1,17 @@
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-11-20.acacia",
-  typescript: true,
-});
+/**
+ * Stripe singleton — fallback gracieux si la clé n'est pas configurée.
+ * Évite un crash au build/runtime quand STRIPE_SECRET_KEY est absent.
+ * Les routes qui utilisent stripe doivent vérifier `if (!stripe) ...`.
+ */
+export const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      // Cast : la version officielle dans les types peut être en retard sur l'API
+      apiVersion: "2024-11-20.acacia" as Stripe.LatestApiVersion,
+      typescript: true,
+    })
+  : (null as unknown as Stripe);
 
 export const PLANS = {
   FREE: {

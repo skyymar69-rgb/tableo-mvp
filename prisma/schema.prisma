@@ -140,6 +140,10 @@ model RestaurantSettings {
   restaurant       Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   primaryColor     String     @default("#F89544")
   accentColor      String     @default("#D64E7E")
+  menuLayout       String     @default("cards")  // "cards" | "list" | "grid"
+  showPrices       Boolean    @default(true)
+  showAllergens    Boolean    @default(true)
+  showCalories     Boolean    @default(false)
   tipsEnabled      Boolean    @default(true)
   tipOptions       Json       @default("[5, 10, 15]")
   orderingEnabled  Boolean    @default(true)
