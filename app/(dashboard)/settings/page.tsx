@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Store, Palette, Bell, CreditCard, Save, Loader2, Upload, Check, Shield, Zap } from "lucide-react";
+import { Store, Palette, Bell, CreditCard, Save, Loader2, Upload, Check, Shield, Zap, FileText } from "lucide-react";
+import Link from "next/link";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -498,6 +499,37 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Notice technique */}
+              <div className="rounded-2xl border border-border bg-gradient-card p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Notice Technique</p>
+                      <p className="text-xs text-muted-foreground">Architecture, sécurité et conformité RGPD</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href="/docs/notice"
+                      className="text-xs px-3 py-1.5 rounded-lg border border-border bg-secondary hover:bg-secondary/80 text-foreground transition-colors font-medium"
+                    >
+                      Consulter
+                    </Link>
+                    <a
+                      href="/api/docs/notice"
+                      download="tableo-notice-technique.html"
+                      className="text-xs px-3 py-1.5 rounded-lg text-white font-semibold transition-all hover:scale-[1.02]"
+                      style={{ background: "linear-gradient(135deg, hsl(var(--warm-start)), hsl(var(--warm-mid)), hsl(var(--warm-end)))" }}
+                    >
+                      Télécharger
+                    </a>
+                  </div>
                 </div>
               </div>
             </>

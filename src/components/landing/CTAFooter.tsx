@@ -1,36 +1,41 @@
 "use client";
 import { ArrowRight, Mail, Twitter, Linkedin, Instagram } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 
 const CTASection = () => (
   <section className="py-16 md:py-20 bg-white">
     <div className="container mx-auto px-6 max-w-[1200px]">
-      <div className="rounded-[16px] bg-[#f5f5f5] p-12 md:p-16 text-center">
-        <p className="text-[11px] font-semibold text-[#6b7280] mb-4 tracking-widest uppercase">Rejoignez 12 000+ restaurants</p>
-        <h2 className="text-[clamp(1.8rem,4vw,2.8rem)] font-display font-semibold tracking-[-0.03em] max-w-2xl mx-auto leading-tight text-[#111111]">
+      <div className="relative rounded-[20px] overflow-hidden p-12 md:p-16 text-center"
+        style={{ background: "linear-gradient(135deg, #001e40 0%, #1603ae 50%, #844981 100%)" }}>
+        {/* decorative blobs */}
+        <div className="pointer-events-none absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/5 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-white/5 blur-3xl" />
+        <p className="relative text-[11px] font-semibold text-white/60 mb-4 tracking-widest uppercase">Rejoignez 12 000+ restaurants</p>
+        <h2 className="relative text-[clamp(1.8rem,4vw,2.8rem)] font-display font-semibold tracking-[-0.03em] max-w-2xl mx-auto leading-tight text-white">
           Prêt à transformer vos tables en machines à revenus ?
         </h2>
-        <p className="mt-5 text-[16px] text-[#374151] max-w-xl mx-auto">
+        <p className="relative mt-5 text-[16px] text-white/75 max-w-xl mx-auto">
           Rejoignez 12 000+ restaurants qui utilisent déjà Tableo pour augmenter leurs revenus.
         </p>
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="relative mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             href="/onboarding"
-            className="inline-flex items-center gap-2 rounded-[8px] bg-[#111111] hover:bg-[#242424] px-8 py-3.5 text-[14px] font-semibold text-white transition-colors focus-ring group"
+            className="inline-flex items-center gap-2 rounded-[8px] bg-white hover:bg-white/90 px-8 py-3.5 text-[14px] font-semibold text-[#001e40] transition-all hover:scale-[1.02] focus-ring group shadow-lg"
           >
             Commencer gratuitement
             <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 rounded-[8px] border border-[#e5e7eb] bg-white hover:border-[#111111]/20 px-8 py-3.5 text-[14px] font-medium text-[#111111] transition-colors focus-ring"
+            className="inline-flex items-center gap-2 rounded-[8px] border border-white/25 hover:border-white/50 bg-white/10 px-8 py-3.5 text-[14px] font-medium text-white transition-all hover:bg-white/20 focus-ring"
           >
             Explorer le dashboard
           </Link>
         </div>
-        <p className="mt-6 text-[13px] text-[#6b7280]">
-          <span className="font-semibold text-[#111111]">347 restaurants</span> ont rejoint Tableo ce mois-ci
+        <p className="relative mt-6 text-[13px] text-white/50">
+          <span className="font-semibold text-white">347 restaurants</span> ont rejoint Tableo ce mois-ci
         </p>
       </div>
     </div>
@@ -46,7 +51,8 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div className="md:col-span-1">
-            <Link href="/" className="inline-flex mb-4 focus-ring rounded-lg">
+            <Link href="/" className="inline-flex items-center gap-2.5 mb-4 focus-ring rounded-lg group">
+              <Image src="/logo.png" alt="Tabléo" width={32} height={32} className="rounded-lg opacity-90 group-hover:opacity-100 transition-opacity" />
               <span className="text-[22px] font-display font-bold tracking-tight text-white">Tabléo</span>
             </Link>
             <p className="text-[13px] text-[#a1a1aa] leading-relaxed mb-4">
@@ -73,9 +79,10 @@ const Footer = () => {
           <div>
             <h4 className="text-[11px] font-semibold text-white uppercase tracking-widest mb-4">Ressources</h4>
             <ul className="space-y-2.5">
-              {["Blog", "Documentation", "Guides", "Webinaires"].map((l) => (
-                <li key={l}><a href="#" className="text-[13px] text-[#a1a1aa] hover:text-white transition-colors">{l}</a></li>
-              ))}
+              <li><Link href="/docs" className="text-[13px] text-[#a1a1aa] hover:text-white transition-colors">Documentation</Link></li>
+              <li><Link href="/docs#faq" className="text-[13px] text-[#a1a1aa] hover:text-white transition-colors">FAQ</Link></li>
+              <li><a href="#" className="text-[13px] text-[#a1a1aa] hover:text-white transition-colors">Blog</a></li>
+              <li><a href="#" className="text-[13px] text-[#a1a1aa] hover:text-white transition-colors">Webinaires</a></li>
             </ul>
           </div>
 

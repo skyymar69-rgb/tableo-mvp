@@ -39,21 +39,32 @@ const trustLogos = [
 ];
 
 const HeroSection = () => (
-  <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 bg-white">
+  <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16"
+    style={{ background: "linear-gradient(160deg, #fdf8ff 0%, #f0f4ff 40%, #fff8f5 100%)" }}>
+    {/* Blobs décoratifs */}
+    <div className="pointer-events-none absolute top-24 -left-32 w-[500px] h-[500px] rounded-full blur-[120px] opacity-25"
+      style={{ background: "radial-gradient(circle, #844981 0%, transparent 70%)" }} />
+    <div className="pointer-events-none absolute top-0 right-0 w-[420px] h-[420px] rounded-full blur-[100px] opacity-20"
+      style={{ background: "radial-gradient(circle, #1603ae 0%, transparent 70%)" }} />
+    <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full blur-[80px] opacity-15"
+      style={{ background: "radial-gradient(ellipse, #001e40 0%, transparent 70%)" }} />
+
     <div className="container relative mx-auto px-6 py-24 text-center max-w-[1200px]" style={{ zIndex: 2 }}>
       {/* Badge */}
-      <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-[#f5f5f5] px-4 py-1.5 mb-10">
+      <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-[#1603ae]/20 bg-[#1603ae]/8 px-4 py-1.5 mb-10">
         <span className="relative flex h-2 w-2" aria-hidden="true">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#111111] opacity-40" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#111111]" />
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1603ae] opacity-60" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#1603ae]" />
         </span>
-        <span className="text-[12px] font-medium text-[#374151]">Revenue Operating System pour restaurants</span>
+        <span className="text-[12px] font-medium text-[#1603ae]">Revenue Operating System pour restaurants</span>
       </div>
 
       {/* Headline */}
       <h1 className="animate-fade-up-d1 text-[clamp(2.5rem,8vw,64px)] font-display font-semibold tracking-[-0.04em] leading-[1.05] max-w-5xl mx-auto text-[#111111]">
         Faites de chaque table une{" "}
-        <span className="text-[#6b7280]">source de revenus</span>
+        <span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(135deg, #001e40, #1603ae, #844981)" }}>
+          source de revenus
+        </span>
       </h1>
 
       <p className="animate-fade-up-d2 mt-7 text-[17px] text-[#374151] max-w-2xl mx-auto leading-relaxed">
@@ -65,17 +76,19 @@ const HeroSection = () => (
       <div className="animate-fade-up-d3 mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
         <Link
           href="/onboarding"
-          className="group inline-flex items-center gap-2 rounded-[8px] bg-[#111111] hover:bg-[#242424] px-8 py-3.5 text-[14px] font-semibold text-white transition-colors focus-ring"
+          className="group inline-flex items-center gap-2 rounded-[10px] px-8 py-3.5 text-[14px] font-semibold text-white transition-all hover:scale-[1.02] focus-ring shadow-lg"
+          style={{ background: "linear-gradient(135deg, #001e40, #1603ae, #844981)" }}
         >
           Commencer gratuitement
           <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
         </Link>
         <Link
           href="/menu/demo"
-          className="inline-flex items-center gap-2.5 rounded-[8px] border border-[#e5e7eb] bg-white hover:border-[#111111]/20 px-8 py-3.5 text-[14px] font-medium text-[#111111] transition-colors focus-ring"
+          className="inline-flex items-center gap-2.5 rounded-[10px] border border-[#e5e7eb] bg-white/80 hover:bg-white hover:border-[#1603ae]/30 px-8 py-3.5 text-[14px] font-medium text-[#111111] transition-colors focus-ring backdrop-blur-sm"
         >
-          <div className="w-7 h-7 rounded-full bg-[#f5f5f5] border border-[#e5e7eb] flex items-center justify-center">
-            <Play className="w-3 h-3 text-[#111111] ml-0.5" />
+          <div className="w-7 h-7 rounded-full flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #001e40, #844981)" }}>
+            <Play className="w-3 h-3 text-white ml-0.5" />
           </div>
           Essayer sans s&apos;inscrire
         </Link>
@@ -100,7 +113,7 @@ const HeroSection = () => (
             <div
               key={logo.name}
               title={logo.name}
-              className="h-8 px-3 rounded-[8px] bg-[#f5f5f5] border border-[#e5e7eb] flex items-center justify-center text-[11px] font-semibold text-[#374151] hover:text-[#111111] hover:border-[#111111]/20 transition-colors"
+              className="h-8 px-3 rounded-[8px] bg-white/80 border border-[#e5e7eb] flex items-center justify-center text-[11px] font-semibold text-[#374151] hover:border-[#1603ae]/30 hover:text-[#1603ae] transition-colors backdrop-blur-sm"
             >
               {logo.initials}
             </div>

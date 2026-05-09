@@ -4,6 +4,7 @@ import { useState, useEffect, useId } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, QrCode } from "lucide-react";
+import Image from "next/image";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -39,8 +40,9 @@ export default function Navbar() {
     >
       <div className="container mx-auto flex items-center justify-between h-16 px-6 max-w-[1200px]">
         {/* Logo */}
-        <Link href="/" aria-label="Tabléo — Accueil" className="flex items-center focus-ring rounded-lg group">
-          <span className="text-[22px] font-bold tracking-tight text-[#111111] font-display group-hover:opacity-70 transition-opacity">
+        <Link href="/" aria-label="Tabléo — Accueil" className="flex items-center gap-2 focus-ring rounded-lg group">
+          <Image src="/logo.png" alt="Tabléo" width={32} height={32} className="rounded-lg group-hover:opacity-80 transition-opacity" priority />
+          <span className="text-[20px] font-bold tracking-tight text-[#111111] font-display group-hover:opacity-70 transition-opacity">
             Tabléo
           </span>
         </Link>
@@ -80,7 +82,7 @@ export default function Navbar() {
           </Link>
           <Link
             href="/onboarding"
-            className="inline-flex items-center gap-1.5 rounded-[8px] bg-[#111111] hover:bg-[#242424] px-5 py-2 text-[14px] font-semibold text-white transition-colors focus-ring"
+            className="inline-flex items-center gap-1.5 rounded-[8px] bg-gradient-warm px-5 py-2 text-[14px] font-semibold text-white shadow-warm hover:scale-[1.02] transition-all focus-ring"
           >
             Commencer gratuitement
           </Link>
@@ -137,7 +139,7 @@ export default function Navbar() {
           <div className="pt-2">
             <Link
               href="/onboarding"
-              className="block rounded-[8px] bg-[#111111] hover:bg-[#242424] px-5 py-2.5 text-[14px] font-semibold text-white text-center focus-ring transition-colors"
+              className="block rounded-[8px] bg-gradient-warm px-5 py-2.5 text-[14px] font-semibold text-white text-center focus-ring"
               onClick={() => setOpen(false)}
             >
               Commencer gratuitement
